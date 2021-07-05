@@ -1,0 +1,25 @@
+math scripts:
+
+- calculate DV for stage
+- calculate total DV
+- calculate hohman DV
+- calculate time for fixed dV maneuver (a = thrust / mass, integral over mass change for the burn)
+
+maneuver scripts:
+orbital:
+- hohman transfer (change AP, circularize)
+- circularize
+- inclination change (including burn to higher orbit for efficiency)
+- orbital period change
+- do contract orbit
+
+body:
+- ascend guidance w/ profile (target speeds, max AoA)
+- go to child body, possibly with inclination and pereapsis height
+
+target:
+- intercept target (orbital period change, wait, kill relative)
+- kill relative velocity
+- docking
+- match inclination
+- match orbit
