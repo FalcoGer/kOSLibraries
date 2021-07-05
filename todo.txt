@@ -10,6 +10,7 @@ ship scripts:
 - get total thrust of all engines
 - auto deploy/retract solar/comms
 - auto deploy/retract gear/lights
+- throttle stepping to prevent overshoot: THROTLE = 1 - (current / target * 0.99) (eg current = SHIP:APOAPSIS, target = 100_000e3)
 
 
 maneuver scripts:
