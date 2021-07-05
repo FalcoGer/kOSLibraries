@@ -1,28 +1,34 @@
 misc scripts:
 
-- timewarp to specific time
+- timewarp to specific time/for specified amount of time
 
-math scripts:
+ship scripts:
 
 - calculate DV for stage, including multi engine and mixed engine
 - calculate total DV
-- calculate hohman DV
 - get isp of all engines combined for stage
 - get total thrust of all engines
-- calculate time for fixed dV maneuver t = g0 * M0 * Isp * (1 - e^(-dV / (g0*Isp))) / F, g0 grav. const, M0 starting mass, F = thrust
-- calculate time for fixed dV maneuver with staging
+- auto deploy/retract solar/comms
+- auto deploy/retract gear/lights
+
 
 maneuver scripts:
 orbital:
-- hohman transfer (change AP, circularize)
+- calculate hohman DV
+- hohman transfer (change AP, circularize), (burn for DV1 time, burn for DV2 time)
 - circularize
 - inclination change (including burn to higher orbit for efficiency)
 - orbital period change
-- do contract orbit
+- do contract orbit (enter arguments from contracts)
+- calculate time for fixed dV maneuver t = g0 * M0 * Isp * (1 - e^(-dV / (g0*Isp))) / F   ; where g0 grav. const, M0 starting mass, F = thrust
+- calculate time for fixed dV maneuver with staging
+- execue node
 
 body:
 - ascend guidance w/ profile (target speeds, max AoA)
 - go to child body, possibly with inclination and pereapsis height
+- descend guidance
+- landing w/ coordinates
 
 target:
 - intercept target (orbital period change, wait, kill relative)
