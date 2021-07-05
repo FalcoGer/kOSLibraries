@@ -28,7 +28,9 @@ body:
 - ascend guidance w/ profile (target speeds, max AoA)
 - go to child body, possibly with inclination and pereapsis height
 - descend guidance
+- landing descend (PID controller controlling vertical speed)
 - landing w/ coordinates
+- time to suicide burn (use fixed dv maneuver time, calculate speed at different heights, equate, solve for height)
 
 target:
 - intercept target (orbital period change, wait, kill relative)
@@ -38,3 +40,4 @@ target:
 - match inclination
 - match orbit
 - time to closest
+- Angle to target (orbital angle that the target is ahead of current vessel)
