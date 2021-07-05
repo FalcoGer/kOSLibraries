@@ -3,6 +3,8 @@ math scripts:
 - calculate DV for stage, including multi engine and mixed engine
 - calculate total DV
 - calculate hohman DV
+- get isp of all engines combined for stage
+- get total thrust of all engines
 - calculate time for fixed dV maneuver t = g0 * M0 * Isp * (1 - e^(-dV / (g0*Isp))) / F, g0 grav. const, M0 starting mass, F = thrust
 - calculate time for fixed dV maneuver with staging
 
