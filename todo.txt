@@ -31,7 +31,7 @@ body:
 - landing descend (PID controller controlling vertical speed)
 - landing w/ coordinates
 - time to suicide burn (use fixed dv maneuver time, calculate speed at different heights, equate, solve for height)
-- time to impact
+- time to impact: d = v0 * t + (a*t^2)/2, solve for t: t = (SQRT(v^2 + 2*g*d) - v) / g     ; where v = initial velocity, g = surface gravity, d = distance to surface.
 
 target:
 - intercept target (orbital period change, wait, kill relative)
