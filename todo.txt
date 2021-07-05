@@ -20,6 +20,7 @@ orbital:
 - circularize
 - inclination change (including burn to higher orbit for efficiency)
 - orbital period change
+- calculate orbital period: t = 2pi * SQRT(SMA^3 / MU)
 - do contract orbit (enter arguments from contracts)
 - calculate time for fixed dV maneuver t = g0 * M0 * Isp * (1 - e^(-dV / (g0*Isp))) / F   ; where g0 grav. const, M0 starting mass, F = thrust
 - calculate time for fixed dV maneuver with staging
@@ -44,3 +45,7 @@ target:
 - match orbit
 - time to closest
 - Angle to target (orbital angle that the target is ahead of current vessel)
+
+
+notes:
+SMA: Semi Major Axis: Average distance PA and AP from center of body (not sea level), determines orbital period
