@@ -24,14 +24,11 @@ SET startupScript TO "startup.ks".
 // actual booting
 // look for update scripts on KSC
 IF HOMECONNECTION:IsConnected {
-  IF HAS_FILE(updateScript, 0) {
-    PRINT "New instructions found.".
+  IF EXISTS("0:/" + updateScript) {
+    PRINT "New instructions found. Compile and download...".
     DOWNLOAD(updateScript, TRUE).
-	SWITCH TO 0.
-	IF HAS_FILE(updateScript, 0) { DELETE updateScript. }
-	SET updateScript TO updateScript + "m".
-	IF HAS_FILE(updateScript, 0) { DELETE updateScript. }
-	SWITCH TO 1.
+	DELETEPATH("0:/" + updateScript).
+	PRINT "Executing update..."
 	RUNPATH(updateScript).
 	PRINT "Instructions completed.".
 	DELETE updateScript.
@@ -39,9 +36,9 @@ IF HOMECONNECTION:IsConnected {
 }
 
 // if startup script exists then run it.
-IF HAS_FILE("startup.ksm", 1) OR HAS_FILE("startup.ks") {
+IF EXISTS("1:/startup.ksm") OR EXISTS("1:/startup.ks") {
   PRINT "Starting STARTUP routine...".
-  RUNPATH("startup").
+  RUNPATH("1:/startup").
   PRINT "Startup finished...".
 } ELSE {
   WAIT UNTIL HOMECONNECTION:IsConnected.
