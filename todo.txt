@@ -32,6 +32,7 @@ body:
 - landing w/ coordinates
 - time to suicide burn (use fixed dv maneuver time, calculate speed at different heights, equate, solve for height)
 - time to impact: d = v0 * t + (a*t^2)/2, solve for t: t = (SQRT(v^2 + 2*g*d) - v) / g     ; where v = initial velocity, g = surface gravity, d = distance to surface.
+- get surface gravity: g = mu / radius^2
 
 target:
 - intercept target (orbital period change, wait, kill relative)
