@@ -1,9 +1,10 @@
 math scripts:
 
-- calculate DV for stage
+- calculate DV for stage, including multi engine and mixed engine
 - calculate total DV
 - calculate hohman DV
-- calculate time for fixed dV maneuver (a = thrust / mass, integral over mass change for the burn)
+- calculate time for fixed dV maneuver t = g0 * M0 * Isp * (1 - e^(-dV / (g0*Isp))) / F, g0 grav. const, M0 starting mass, F = thrust
+- calculate time for fixed dV maneuver with staging
 
 maneuver scripts:
 orbital:
@@ -19,6 +20,7 @@ body:
 
 target:
 - intercept target (orbital period change, wait, kill relative)
+- intercept target with hohman transfer at best time to meet with target at new AP/PE
 - kill relative velocity
 - docking
 - match inclination
