@@ -25,9 +25,16 @@ misc scripts:
 
 - hill climbing algorithm
     pass fitness function, calculates fitness for given arguments
-    pass arguments to mutate list
-    pass mutate function list, all mutations that are to be done, may include constraints that prevent mutation (too much dV, too much time in future)
-    applies all mutations and selects the best one or returns the best
+    pass arguments as lists with step size list for step size of every argument
+    find neighbors
+    applies all +/- step sizes on all arguments and those are the neighbors
+    fitness function evaluates the neighbors, the best one is returned as the current object of interest unless the current one is the best already
+    
+    can chain those with decreasing step sizes:
+    optimize maneuver for transfer to body
+    optimize maneuver for dV (bad score for destroying transfer)
+    optimize maneuver for inclination (bad score for destroying transfer)
+    optimize maneuver for PA (bad score for destroying transfer or changing inclination much)
 
 ship scripts:
 
