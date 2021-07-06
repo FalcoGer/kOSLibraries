@@ -45,6 +45,7 @@ maneuver scripts:
 orbital:
 - calculate hohman DV
 - hohman transfer (change AP, circularize), (burn for DV1 time, burn for DV2 time)
+- hill climbing maneuver planner
 - circularize
 - inclination change (including burn to higher orbit for efficiency)
 - orbital period change
