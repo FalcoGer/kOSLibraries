@@ -23,6 +23,30 @@ misc scripts:
       }
     update runmode function to save runmode to file, then update runmode var
 
+- hill climbing algorithm
+    pass fitness function, calculates fitness for given arguments
+    pass arguments to mutate list
+    pass mutate function list, all mutations that are to be done, may include constraints that prevent mutation (too much dV, too much time in future)
+    applies all mutations and selects the best one or returns the best
+- genetic algorithm
+    pass initial population
+      population: list of candidates, generation
+        candidate: lexicon of genetics, fitness
+    pass mutate function
+    pass stop function
+    pass crossbreed function
+    
+    init, evaluate
+    until done:
+      select
+      crossbreed_population
+      mutate
+      evaluate
+      done = stop()
+   
+    select function: select upper half of the candidates
+    crossbreed_population function: select parents based on how well they did randomly then apply breeding function passed as argument until back to original pop size.
+
 ship scripts:
 
 - calculate DV for stage, including multi engine and mixed engine
