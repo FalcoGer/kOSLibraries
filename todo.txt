@@ -79,3 +79,6 @@ target:
 
 notes:
 SMA: Semi Major Axis: Average distance PA and AP from center of body (not sea level), determines orbital period
+for transfers and orbit changes, make sure to avoid body encounters
+for hill climbing or genetic algorithm aproaches make sure to not crash into a body.
+for hill climbing with gravity assist, add maneuver after SOI change back to parent body with 4DOF (time, pro, rad, norm)
