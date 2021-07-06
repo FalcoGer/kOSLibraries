@@ -34,6 +34,8 @@ orbital:
 
 body:
 - ascend guidance w/ profile (target speeds, max AoA)
+   Have a 2 PID controllers. One of the controllers optimizes pitch for eccentricity over altitude. (1 at launch site or maybe at a given start time (10 seconds after launch))
+   The second controller optimizes the throttle for ETA to AP so that it's always 30 seconds on the future.
 - go to child body, possibly with inclination and pereapsis height
 - descend guidance
 - landing descend (PID controller controlling vertical speed)
