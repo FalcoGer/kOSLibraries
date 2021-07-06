@@ -12,6 +12,12 @@ ship scripts:
 - auto deploy/retract gear/lights
 - throttle stepping to prevent overshoot: THROTLE = 1 - (current / target * 0.99) (eg current = SHIP:APOAPSIS, target = 100_000e3)
 
+aircraft:
+- fly to waypoint
+- autoland
+- set altitude (pid)
+- set heading  (pid)
+- set speed    (pid)
 
 maneuver scripts:
 orbital:
