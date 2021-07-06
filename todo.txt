@@ -46,6 +46,7 @@ misc scripts:
    
     select function: select upper half of the candidates
     crossbreed_population function: select parents based on how well they did randomly then apply breeding function passed as argument until back to original pop size.
+    mutation may get the generation as argument to allow less over time.
 
 ship scripts:
 
