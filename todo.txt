@@ -2,21 +2,26 @@ misc scripts:
 
 - timewarp to specific time/for specified amount of time
 - mission scheduler with event loop
-    mission: list of pairs, name, function_delegate@
+    mission: lexicon of functions
+      next mission step function
+      set mission step function
+      get mission step function
+      add event function
+      remove event function
+      terminate mission function
+    sequence: list of pairs, name, function_delegate@
       ["Ascend", ascend@], ["circularize", circularize@], ["transfer", transfer@], ...
     events: lexicon of name, function_delegate@
       ["check_for_update", check_for_update@], ["check electrical power", check_power@], ["check messages", check_msg@], ["log telemetry", logTel@] ...
-  
-    next mission step function
-    set mission step function
-    get mission step function
-    add event function
-    remove event function
-    terminate mission function
-    
     mission step and events are saved to file so that when craft is unloaded and reloaded or looses power it will resume where it left off without cumbersome checks like status = "Landed"
     
-    run_mission(mission_list, event_lexicon)
+    run_mission(sequence, event_lexicon)
+      generates mission lexicon, loads runmode from file if exists and runs the main loop
+      while not done {
+        sequence[runmode](mission).
+        for event in events { events[event](mission). }
+      }
+    update runmode function to save runmode to file, then update runmode var
 
 ship scripts:
 
