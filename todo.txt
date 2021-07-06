@@ -1,6 +1,22 @@
 misc scripts:
 
 - timewarp to specific time/for specified amount of time
+- mission scheduler with event loop
+    mission: list of pairs, name, function_delegate@
+      ["Ascend", ascend@], ["circularize", circularize@], ["transfer", transfer@], ...
+    events: lexicon of name, function_delegate@
+      ["check_for_update", check_for_update@], ["check electrical power", check_power@], ["check messages", check_msg@], ["log telemetry", logTel@] ...
+  
+    next mission step function
+    set mission step function
+    get mission step function
+    add event function
+    remove event function
+    terminate mission function
+    
+    mission step and events are saved to file so that when craft is unloaded and reloaded or looses power it will resume where it left off without cumbersome checks like status = "Landed"
+    
+    run_mission(mission_list, event_lexicon)
 
 ship scripts:
 
@@ -15,9 +31,10 @@ ship scripts:
 aircraft:
 - fly to waypoint
 - autoland
-- set altitude (pid)
-- set heading  (pid)
-- set speed    (pid)
+- set altitude       (pid -> pitch (limit AoA, limit pitchup))
+- set heading        (pid -> roll (limit roll angle))
+- set speed          (pid -> (lots of) negative means speed brakes?)
+- set vertical speed (PID -> pitch (limit AoA, limit pitchup))
 
 maneuver scripts:
 orbital:
