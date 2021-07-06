@@ -2,17 +2,7 @@ misc scripts:
 
 - timewarp to specific time/for specified amount of time
 - mission scheduler with event loop
-    mission: lexicon of functions
-      next mission step function
-      set mission step function
-      get mission step function
-      add event function
-      remove event function
-      terminate mission function
-    sequence: list of pairs, name, function_delegate@
-      ["Ascend", ascend@], ["circularize", circularize@], ["transfer", transfer@], ...
-    events: lexicon of name, function_delegate@
-      ["check_for_update", check_for_update@], ["check electrical power", check_power@], ["check messages", check_msg@], ["log telemetry", logTel@] ...
+
     mission step and events are saved to file so that when craft is unloaded and reloaded or looses power it will resume where it left off without cumbersome checks like status = "Landed"
     
     run_mission(sequence, event_lexicon)

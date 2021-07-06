@@ -101,8 +101,8 @@ any number non-zero is true
 ## keywords
 
 add 			- ?
-all 			- ?
-at  			- ?
+all 			- UNLOCK ALL
+at  			- print at specified location (`PRINT "HELLO" AT (5,7).`)
 break 			- break out of loops
 choose			- ternary operator
 clearscreen		- clears kos terminal
@@ -121,7 +121,7 @@ for				- for loops (iterator over container)
 from			- from loop (classic for loop)
 function		- declare function
 global			- declare global variable
-in				- for use in for loops
+in				- for use in for loops, put special into list (LIST ENGINES IN eList)
 is				- initialize with LOCAL or GLOBAL
 list			- declare list
 local			- declare local variable
@@ -135,7 +135,7 @@ preserve		- deprecated. do not use. see when/on
 print			- print text to screen
 reboot			- restart boot program
 remove			- ?
-rename			- ?
+rename			- rename file, deprecated. use MOVEPATH instead.
 return			- return from function with value
 run				- run script file, deprecated. use runpath or runoncepath
 runoncepath		- run the given path only once. it will skip execution if the script has been run before
