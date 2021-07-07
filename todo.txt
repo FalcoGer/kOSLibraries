@@ -63,11 +63,12 @@ body:
    The second controller optimizes the throttle for ETA to AP so that it's always 30 seconds on the future.
 - go to child body, possibly with inclination and pereapsis height
 - descend guidance
-- landing descend (PID controller controlling vertical speed)
+- landing descend (PID controller controlling vertical speed (via TWR adjusted for ship tilt)), avoid slopes by follow slopes up or down by pointing towards the slope angle
 - landing w/ coordinates
 - time to suicide burn (use fixed dv maneuver time, calculate speed at different heights, equate, solve for height)
 - time to impact: d = v0 * t + (a*t^2)/2, solve for t: t = (SQRT(v^2 + 2*g*d) - v) / g     ; where v = initial velocity, g = surface gravity, d = distance to surface.
 - get surface gravity: g = mu / radius^2
+- get surface slope angle: make 3 geolocation points around the location you want to measure, get two vectors between the points and do the dot product to get the normal vector. then measure against the up vector for the slope
 
 target:
 - intercept target (orbital period change, wait, kill relative)
