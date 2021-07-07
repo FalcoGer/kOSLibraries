@@ -1,18 +1,5 @@
 misc scripts:
 
-- timewarp to specific time/for specified amount of time
-- mission scheduler with event loop
-
-    mission step and events are saved to file so that when craft is unloaded and reloaded or looses power it will resume where it left off without cumbersome checks like status = "Landed"
-    
-    run_mission(sequence, event_lexicon)
-      generates mission lexicon, loads runmode from file if exists and runs the main loop
-      while not done {
-        sequence[runmode](mission).
-        for event in events { events[event](mission). }
-      }
-    update runmode function to save runmode to file, then update runmode var
-
 - hill climbing algorithm
     pass fitness function, calculates fitness for given arguments
     pass arguments as lists with step size list for step size of every argument
@@ -26,16 +13,6 @@ misc scripts:
     optimize maneuver for inclination (bad score for destroying transfer)
     optimize maneuver for PA (bad score for destroying transfer or changing inclination much)
 
-ship scripts:
-
-- calculate DV for stage, including multi engine and mixed engine
-- calculate total DV
-- get isp of all engines combined for stage
-- get total thrust of all engines
-- auto deploy/retract solar/comms
-- auto deploy/retract gear/lights
-- throttle stepping to prevent overshoot: THROTLE = 1 - (current / target * 0.99) (eg current = SHIP:APOAPSIS, target = 100_000e3)
-
 aircraft:
 - fly to waypoint
 - autoland
@@ -46,22 +23,20 @@ aircraft:
 
 maneuver scripts:
 orbital:
-- calculate hohman DV
-- hohman transfer (change AP, circularize), (burn for DV1 time, burn for DV2 time)
-- circularize
-- inclination change (including burn to higher orbit for efficiency (hill climbing with 3 nodes (change AP at DN, change inclination at AN, circularize/burn back to original/ignore)?))
+- circularize, change AP/PA
+- inclination change
+    including burn to higher orbit for efficiency (hill climbing with 3 nodes (change AP at DN, change inclination at AN, circularize/burn back to original/ignore)?))
+	also including actual inclination change not to edit PA
 - orbital period change
-- calculate orbital period: t = 2pi * SQRT(SMA^3 / MU)
 - do contract orbit (enter arguments from contracts)
-- calculate time for fixed dV maneuver t = g0 * M0 * Isp * (1 - e^(-dV / (g0*Isp))) / F   ; where g0 grav. const, M0 starting mass, F = thrust
 - calculate time for fixed dV maneuver with staging
-- execue node
+- go to child body, possibly with inclination and pereapsis height
+
 
 body:
 - ascend guidance w/ profile (target speeds, max AoA)
    Have a 2 PID controllers. One of the controllers optimizes pitch for eccentricity over altitude. (1 at launch site or maybe at a given start time (10 seconds after launch))
    The second controller optimizes the throttle for ETA to AP so that it's always 30 seconds on the future.
-- go to child body, possibly with inclination and pereapsis height
 - descend guidance
 - landing descend (PID controller controlling vertical speed (via TWR adjusted for ship tilt)), avoid slopes by follow slopes up or down by pointing towards the slope angle
 - surface descend steering: lock steering to lookdirup(up:vector * g + deltaVelocity) where deltaVelocity is locked to desiredVelocity - surfaceVelocity
@@ -69,8 +44,6 @@ body:
 - landing w/ coordinates
 - time to suicide burn (use fixed dv maneuver time, calculate speed at different heights, equate, solve for height)
 - time to impact: d = v0 * t + (a*t^2)/2, solve for t: t = (SQRT(v^2 + 2*g*d) - v) / g     ; where v = initial velocity, g = surface gravity, d = distance to surface.
-- get surface gravity: g = mu / radius^2
-- get surface slope angle: make 3 geolocation points around the location you want to measure, get two vectors between the points and do the dot product to get the normal vector. then measure against the up vector for the slope
 
 target:
 - intercept target (orbital period change, wait, kill relative)
@@ -88,3 +61,5 @@ SMA: Semi Major Axis: Average distance PA and AP from center of body (not sea le
 for transfers and orbit changes, make sure to avoid body encounters
 for hill climbing or genetic algorithm aproaches make sure to not crash into a body.
 for hill climbing with gravity assist, add maneuver after SOI change back to parent body with 4DOF (time, pro, rad, norm)
+hill climbing for maneuvers can be done with CREATEORBIT(pos, vel, body, ut), so nodes need not be created.
+  this will however not calculate SOI changes.
