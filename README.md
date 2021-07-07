@@ -100,7 +100,7 @@ any number non-zero is true
 
 ## keywords
 
-add 			- ?
+add 			- add maneuver node to flight plan
 all 			- UNLOCK ALL
 at  			- print at specified location (`PRINT "HELLO" AT (5,7).`)
 break 			- break out of loops
@@ -134,7 +134,7 @@ parameter		- declare function or script parameter
 preserve		- deprecated. do not use. see when/on
 print			- print text to screen
 reboot			- restart boot program
-remove			- ?
+remove			- remove maneuver node from flight plan
 rename			- rename file, deprecated. use MOVEPATH instead.
 return			- return from function with value
 run				- run script file, deprecated. use runpath or runoncepath
