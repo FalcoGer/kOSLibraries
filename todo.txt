@@ -63,7 +63,7 @@ body:
    The second controller optimizes the throttle for ETA to AP so that it's always 30 seconds on the future.
 - go to child body, possibly with inclination and pereapsis height
 - descend guidance
-- landing descend (PID controller controlling vertical speed (via TWR adjusted for ship tilt)), avoid slopes by follow slopes up or down by pointing towards the slope angle
+- landing descend (PID controller controlling vertical speed (via TWR adjusted for ship tilt)), avoid slopes by follow slopes up or down by pointing towards the slope angle, PID controlling pitch angle for desired speed vector vs surface speed vector.
 - landing w/ coordinates
 - time to suicide burn (use fixed dv maneuver time, calculate speed at different heights, equate, solve for height)
 - time to impact: d = v0 * t + (a*t^2)/2, solve for t: t = (SQRT(v^2 + 2*g*d) - v) / g     ; where v = initial velocity, g = surface gravity, d = distance to surface.
