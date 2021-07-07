@@ -80,5 +80,5 @@ FUNCTION BDY_getRadialOutVector {
 }
 
 FUNCTION BDY_getTimeToImpact {
-  
+  // TODO
 }
