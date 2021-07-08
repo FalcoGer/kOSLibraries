@@ -15,11 +15,23 @@ misc scripts:
 
 aircraft:
 - fly to waypoint
-- autoland
+- autoland:
+    PID throttle for AoA keeping
+    PID pitch for glide slope keeping (3°)
+    PID roll for 0 roll keeping
+    PID yaw for heading keeping to touchdown
+    check bounding box for ground contact
+    throttle 0, use yaw PID to keep runway heading, full brakes, unlock pitch
+- auto T/O
+    set throttle to 1
+    PID roll for 0 roll keeping
+    PID yaw for centerline keeping
+    PID pitch at T/O speed for 3° up
 - set altitude       (pid -> pitch (limit AoA, limit pitchup))
 - set heading        (pid -> roll (limit roll angle))
 - set speed          (pid -> (lots of) negative means speed brakes?)
 - set vertical speed (PID -> pitch (limit AoA, limit pitchup))
+- SSTO?
 
 maneuver scripts:
 orbital:
