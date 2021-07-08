@@ -1,3 +1,5 @@
+GLOBAL lineDelim IS "==================================================".
+
 // Display a message
 FUNCTION NOTIFY {
   PARAMETER message.
@@ -60,21 +62,46 @@ FUNCTION DOWNLOAD {
 // Put a file on KSC
 FUNCTION UPLOAD {
   PARAMETER name.
+  LOCAL uploadDir IS "0:/" + SHIP:NAME + "/Uploads." + getMissionCount().
   IF CORE:VOLUME:EXISTS(name) {
-    IF NOT ARCHIVE:EXISTS(SHIP:NAME) {
-      ARCHIVE:CREATEDIR("0:/" + SHIP:NAME).
-	}
-	COPYPATH(name, "0:/" + SHIP:NAME + "/" + name).
+    IF NOT EXISTS(uploadDir) {
+      CREATEDIR(uploadDir).
+    }
+    COPYPATH(name, "0:/" + SHIP:NAME + "/" + name).
   }
 }
 
-// Run a library, downloading it from KSC if necessary
+// Run a library, downloading it from KSC if necessary or if connection exists already.
 FUNCTION REQUIRE {
   PARAMETER name.
-  IF NOT CORE:VOLUME:EXISTS(name + "m")
+  IF NOT CORE:VOLUME:EXISTS(name + "m") OR CHECK_CONNECTION()
   {
-    WAIT UNTIL CHECK_CONNECTION.
-	DOWNLOAD(name, NOT DEBUG).
+    LOCAL comp IS NOT DEBUG.
+    WAIT UNTIL CHECK_CONNECTION().
+    PRINT "Fetching " + name + ", Compile: " + comp.
+    DOWNLOAD(name, comp).
   }
-  RUNPATH (name + "m").
+  RUNONCEPATH (name + "m").
+}
+
+FUNCTION getMissionCount
+{
+  // cnt file is to count how many mission files have been executed so far so not to overwrite previously executed scripts, telemetry and other such data.
+  LOCAL cntFilePath IS "0:/" + SHIP:NAME + "/count.txt".
+  LOCAL cnt IS 0.
+  IF EXISTS(cntFilePath)
+  {
+    // read count
+    LOCAL cntFile IS OPEN(cntFilePath).
+    SET cnt TO cntFile:READALL:STRING():TONUMBER().
+  }
+  RETURN cnt.
+}
+
+FUNCTION addMissionCounter
+{
+  LOCAL cntFilePath IS "0:/" + SHIP:NAME + "/count.txt".
+  LOCAL cnt IS getMissionCount().
+  DELETEPATH(cntFilePath).
+  CREATE(cntFilePath):WRITE("" + (cnt + 1)).
 }

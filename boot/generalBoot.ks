@@ -6,8 +6,6 @@ WAIT 1.
 
 CLEARSCREEN.
 
-GLOBAL lineDelim IS "==================================================".
-
 // script holds mission file
 // when a new mission for the craft is found on the ARCHIVE then
 // it will be downloaded and the mission will be reset.
@@ -21,16 +19,12 @@ SET missionScript TO "mission.ks".
 // vessel switching
 SET stageBackup TO "currentStage.txt".
 
-
-PRINT "".
-PRINT lineDelim.
-
 // init archive for this vessel
 IF HOMECONNECTION:ISCONNECTED() AND NOT ARCHIVE:EXISTS(SHIP:NAME) {
   ARCHIVE:CREATEDIR(SHIP:NAME).
   LOCAL fileHandle IS ARCHIVE:CREATE(SHIP:NAME + "/" + reloadMission.bat).
-  reloadMissionFile:WRITELN("@ECHO OFF").
-  reloadMissionFile:WRITELN("COPY _" + missionScript + " " + missionScript).
+  fileHandle:WRITELN("@ECHO OFF").
+  fileHandle:WRITELN("COPY _" + missionScript + " " + missionScript).
   
   COPYPATH("0:/mission_rump.ks", "0:/" + SHIP:NAME + "/" + "_" + missionScript).
 }
@@ -48,7 +42,7 @@ FROM {LOCAL i IS CHOOSE 30 IF DEBUG ELSE 2.} UNTIL (i = 0) STEP { SET i TO i-1. 
 }
 
 // compile and load helperFunctions if not already on the file system (reboot).
-IF DEBUG {
+IF NOT DEBUG {
   IF NOT EXISTS("helperFunctions.ksm") {
     PRINT "Fetching Helper Functions...".
     COPYPATH("0:/helperFunctions.ks", "helperFunctions.ks").
@@ -67,6 +61,9 @@ ELSE {
 RUNONCEPATH("helperFunctions").
 
 print "Helper Functions loaded.".
+
+PRINT "".
+PRINT lineDelim.
 
 FUNCTION main
 {
@@ -88,7 +85,7 @@ FUNCTION mission_runner
   
   // initialize events
   LOCAL events IS LEXICON().
-  SET events["checkMissionUpdate"] TO evt_checkMissionUpdate@.
+  SET events["msnUpdate"] TO evt_checkMissionUpdate@.
   
   // ========================================================
   // initialize mission functions
@@ -148,31 +145,29 @@ FUNCTION mission_runner
   // main loop
   UNTIL FALSE // run forever
   {
-    PRINT "Current Stage: " + mission["currentStage"] AT (70, 1).
     // do stage
-	// find stage to do
-	LOCAL stageIdx IS mission["sequence"]:FIND(mission["currentStage"]).
-	// execute the function for that stage if the stage is found in the current profile
-	IF stageIdx >= 0 {
-	  mission["sequence"][stageIdx + 1](mission).
-	}
-	// if none found, just keep in the loop anyway, but wait a bit to save power.
-	// event checkMissionUpdate will check for mission updates from KSC
-	ELSE {
-	  PRINT "No mission, waiting for " + SHIP:NAME + "/" + missionScript + " on archive." AT (0,1).
-	  PRINT lineDelim AT (0, 2).
-	}
-	
-	// do events
-	FOR key IN mission["events"]:KEYS {
-	  LOCAL keep IS mission["events"][key](mission).
-	  IF NOT keep {
-	    mission["removeEvent"](mission, key).
-	  }
-	}
-	
-	// don't trash the CPU
-	WAIT 0. // wait for the rest of the physics tick
+    // find stage to do
+    LOCAL stageIdx IS mission["sequence"]:FIND(mission["currentStage"]).
+    // execute the function for that stage if the stage is found in the current profile
+    IF stageIdx >= 0 {
+      mission["sequence"][stageIdx + 1](mission).
+    }
+    // if none found, just keep in the loop anyway, but wait a bit to save power.
+    // event checkMissionUpdate will check for mission updates from KSC
+    ELSE {
+      PRINT "No mission, waiting for " + SHIP:NAME + "/" + missionScript + " on archive." AT (0,1).
+      PRINT lineDelim AT (0, 2).
+    }
+    
+    // do events
+    FOR key IN mission["events"]:KEYS {
+      LOCAL keep IS mission["events"][key](mission).
+      IF NOT keep {
+        mission["removeEvent"](key).
+      }
+    }
+    // don't trash the CPU
+    WAIT 0. // wait for the rest of the physics tick
   }
   
 }
@@ -225,10 +220,11 @@ FUNCTION getStage {
   RETURN mission["currentStage"].
 }
 
-FUNCTION addEvent{
+FUNCTION addEvent {
   PARAMETER eventName.
   PARAMETER eventFunc.
   
+  PRINT "Adding event " + eventName.
   SET mission["events"][eventName] TO eventFunc.
 }
 
@@ -242,6 +238,7 @@ FUNCTION removeEvent {
   {
     NOTIFY("Removing event '" + eventName + "' unable, not found.",2).
   }
+  PRINT "Removing event " + eventName.
 }
 
 FUNCTION terminate {
@@ -275,47 +272,35 @@ FUNCTION evt_checkMissionUpdate {
   
   // check if connected
   IF CHECK_CONNECTION() {
-	LOCAL archivePath IS "0:/" + SHIP:NAME + "/" + missionScript.
-	LOCAL localPath IS "/" + missionScript + "m".
-	LOCAL executedDir IS "0:/" + SHIP:NAME + "/executed".
-	LOCAL cntFilePath IS executedDir + "/count.txt".
+    LOCAL archivePath IS "0:/" + SHIP:NAME + "/" + missionScript.
+    LOCAL localPath IS "/" + missionScript + "m".
+    LOCAL executedDir IS "0:/" + SHIP:NAME + "/executed".
+    LOCAL cnt IS getMissionCount().
     // check if new mission exists
     IF EXISTS(archivePath) {
-	  DOWNLOAD(archivePath, NOT DEBUG, localPath).
-	  
-	  // move script on archive into executed directory
-	  // this prevents missions from executing multiple time.
-	  // create directory if not exists
-	  IF NOT EXISTS(executedDir)
-	  {
-	    CREATEDIR(executedDir).
-	  }
-	  // cnt file is to count how many mission files have been executed so far so not to overwrite previously executed scripts.
-	  
-	  LOCAL cnt IS 0.
-	  IF EXISTS(cntFilePath)
-	  {
-	    // read count
-	    LOCAL cntFile IS OPEN(cntFilePath).
-	    SET cnt TO cntFile:READALL:STRING():TONUMBER().
-	  }
-	  
-	  // move mission file on archive to new location
-	  MOVEPATH(archivePath, executedDir + "/mission." + cnt + ".ks").
-	  
-	  // update count file
-	  DELETEPATH(cntFilePath).
-	  CREATE(cntFilePath):WRITE("" + (cnt + 1)).
-	  
-	  IF EXISTS(stageBackup)
+      DOWNLOAD(archivePath, NOT DEBUG, localPath).
+      
+      // move script on archive into executed directory
+      // this prevents missions from executing multiple time.
+      // create directory if not exists
+      IF NOT EXISTS(executedDir)
+      {
+        CREATEDIR(executedDir).
+      }
+      
+      // move mission file on archive to new location
+      MOVEPATH(archivePath, executedDir + "/mission." + cnt + ".ks").
+      
+      IF EXISTS(stageBackup)
       {
         DELETEPATH(stageBackup).
       }
-	  
-	  NOTIFY ("Found new mission, reboot in 5.", 1).
-	  WAIT 5.
-	  REBOOT.
-	}
+      
+      NOTIFY ("Found new mission, reboot in 5.", 1).
+      PRINT lineDelim.
+      WAIT 5.
+      REBOOT.
+    }
   }
   
   RETURN TRUE.

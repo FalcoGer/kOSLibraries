@@ -15,6 +15,6 @@ FUNCTION init {
   
   IF startTime = 0 {
     SET startTime TO TIME:SECONDS.
-	NOTIFY("INIT", 0).
+	  NOTIFY("INIT", 0).
   }
 }
