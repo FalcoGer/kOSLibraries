@@ -2,8 +2,8 @@
 // all functions should only wait for very small amounts of time if at all.
 // such waits may be needed for maneuver planning (hill climbing for a few seconds) and for KSP to figure out orbital patches (stretches of orbits in different SOIs).
 
-REQUIRE("math.ks").
-REQUIRE("ship.ks").
+REQUIRE("lib/math.ks").
+REQUIRE("lib/ship.ks").
 
 SET MNV_INCL_STRAT_CIRC_AT_PA TO 0.
 SET MNV_INCL_STRAT_CIRC_AT_AP TO 1.
@@ -11,7 +11,7 @@ SET MNV_INCL_STRAT_LEAVE_ECCENTRIC TO 2.
 
 // when autowarping keep track of if the warp has been done before or not.
 // this is to prevent repeatedly setting warping.
-SET MNV_WARP_IS_SET IS FALSE.
+SET MNV_WARP_IS_SET TO FALSE.
 
 // execute maneuver node
 // does not stage automatically!
@@ -34,11 +34,11 @@ FUNCTION MNV_nodeExec {
     LOCK STEERING TO NEXTNODE:BURNVECTOR.   // steer to maneuver node
     LOCK mnvDv TO NEXTNODE:BURNVECTOR:MAG.  // fetch maneuver dV
     LOCK mnvTime TO MNV_getTimeForFixedDVManeuver(NEXTNODE:BURNVECTOR:MAG).
-    LOCK deltaAngle TO VANG(SHIP:FACING, NEXTNODE:BURNVECTOR).
+    LOCK deltaAngle TO VANG(SHIP:FACING:VECTOR, NEXTNODE:BURNVECTOR).
     LOCK startTime TO MNV_getNodeStartTime(NEXTNODE).
     
     // check if time has come to burn
-    IF TIME:SECONDS > startTime.
+    IF TIME:SECONDS > startTime
     {
       // Do engine burn
       IF
