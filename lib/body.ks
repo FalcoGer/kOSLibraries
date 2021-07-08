@@ -1,75 +1,72 @@
 LOCK gSrf TO BDY_getGAtAltitude(SHIP:BODY, 0).
 LOCK gCur TO BDY_getGAtAltitude(SHIP:BODY, SHIP:ALTITUDE).
 
-REQUIRE("lib/math.ks").
 REQUIRE("lib/ship.ks").
+REQUIRE("lib/math.ks").
 
 // control pitch for eccentricity over altitude
 FUNCTION BDY_ascendGuidance {
   PARAMETER desiredAltitude.        // should not be too high
-  PARAMETER PID_twr.                // let the user worry about setting up the PIDs
-  PARAMETER PID_pitch.
   PARAMETER HDG IS 90.              // heading in compass degrees
-  PARAMETER AoALimit IS 10.         // degrees of AoA deviation, is increased as atmos pressure decreases
+  PARAMETER desiredTWR IS 1.8.      // TWR to use during ascend
+  PARAMETER AoALimit IS 5.          // degrees of AoA deviation, is increased as atmos pressure decreases
   
   IF desiredAltitude < SHIP:ORBIT:APOAPSIS {
     LOCK THROTTLE TO 0.
-    WAIT 0.
     UNLOCK THROTTLE.
-    UNLOCK STEERING.
-    RETURN TRUE.    // we're done, send true.
+    IF BODY:ATM:EXISTS AND ALTITUDE < BODY:ATM:HEIGHT
+    {
+      // coasting to end of atmoshpere with minimum drag
+      LOCK STEERING TO SHIP:SRFPROGRADE.
+      RETURN FALSE.   // we're not done until we're in space!
+    }
+    ELSE
+    {
+      // out of atmosphere and altitude reached, we're done.
+      UNLOCK STEERING.
+      RETURN TRUE.    // we're done, send true.
+    }
   }
   
   // calculate some stuff for AoA limiting
   LOCK AoA TO VANG(SHIP:SRFPROGRADE:VECTOR, SHIP:FACING:VECTOR).
-  LOCK atmPressure TO SHP_pressure().
-  LOCK AoADynamicLimit TO CHOOSE 180 IF atmPressure < 0.001 ELSE
+  LOCAL atmPressure IS SHP_pressure().
+  LOCK AoADynamicLimit TO CHOOSE 180 IF atmPressure < 0.001
         // 1 at sea level
-        MIN(AoALimit / atmPressure, 180).
+        ELSE MIN(AoALimit / atmPressure, 180).
   
-  PRINT "Pressure: " + ROUND(atmPressure, 2) AT (70,8).
-  PRINT "DynAoA limit: " + ROUND(AoADynamicLimit, 2) AT (70,9).
+  PRINT "Pressure: " + ROUND(atmPressure, 2) + "    " AT (70,8).
+  PRINT "DynAoA limit: " + ROUND(AoADynamicLimit, 2) + "   " AT (70,9).
   
   // launch from ground
   IF ALT:RADAR < 500 {
     LOCK STEERING TO HEADING (HDG, 90).
     LOCK THROTTLE TO 1.
-    WAIT 3.
-    SET PID_pitch:MINOUTPUT TO 0.
-    SET PID_pitch:MAXOUTPUT TO 1.
-    SET PID_twr:MINOUTPUT TO 0.
-    SET PID_twr:MAXOUTPUT TO 1.
-    SET PID_twr:SETPOINT TO 0.
-    SET PID_pitch:SETPOINT TO 0.
-    PID_pitch:RESET().
-    PID_twr:RESET().
-    RETURN FALSE.
+    RETURN FALSE.       // certainly not done here, send false.  
   }
   
-  // compute throttle via twr so that SHIP:ORBIT:APOAPSIS - 5_000 - SHIP:ALTITUDE = 0
-  // aka: keep apoapsis always 5km above current ship altitude.
-  // may be better to have a fixed time to AP instead?
-  LOCK throttlePidInput TO SHIP:ORBIT:APOAPSIS - 5_000 - SHIP:ALTITUDE.
-  LOCK desiredTwr TO PID_twr:UPDATE(TIME:SECONDS, throttlePidInput).
-  LOCK THROTTLE TO (desiredTwr * SHP_getMaxTWR()) / MIN(SHP_getMaxTWR(), 0.0001).
-  
-  // compute desired pitch angle, limited by dynamic limit
-  IF AoA > AoADynamicLimit {
-    // steer towards srfprograde to reduce pitch.
-    LOCK STEERING TO SHIP:SRFPROGRADE.
-    PID_pitch:RESET().
+  // maintain constant TWR burn.
+  LOCAL maxTWR IS SHP_getMaxTWR().
+  IF NOT (maxTWR < 0.001)
+  {
+    LOCK THROTTLE TO desiredTwr / maxTWR.
   }
   ELSE
   {
-    // eccentricity at ground level = 1, circular = 0
-    // comput desired pitch angle so that currentAP/desiredAlt - eccentricity = 0
-    // aka: at ground it's 0 and as current apoapsis increases it goes to 1 to move eccentricity to 0
-    LOCK desiredEccentricity TO MATH_gaussian(SHIP:ORBIT:APOAPSIS/desiredAltitude, 1, 0, 0.4).
-    PRINT "Desired ECC: " + ROUND(desiredEccentricity,3) AT (70,11).
-    LOCK pitchPidInput TO desiredEccentricity - SHIP:ORBIT:ECCENTRICITY.
-    LOCK desiredPitch TO PID_pitch:UPDATE(TIME:SECONDS, pitchPidInput).
-    LOCK STEERING TO HEADING(HDG, 90 - 90*desiredPitch).
+    LOCK THROTTLE TO 0.
   }
+  
+  // compute desired pitch angle via ratio altitude/desiredAltitude
+  PRINT "ECC: " + ROUND(SHIP:ORBIT:ECCENTRICITY,3) AT (70,10).
+  
+  LOCK altRatio TO ALTITUDE/desiredAltitude.
+  LOCK desiredPitch TO 90 - ((altRatio^0.3) * 90).
+  PRINT "Desired Pitch: " + ROUND(desiredPitch,2) AT (70,11).
+  LOCK steeringVector TO HEADING(HDG, desiredPitch).
+  LOCK STEERING TO CHOOSE steeringVector
+                    IF AoA < AoADynamicLimit
+                    // when AoA over limit then rotate srfprograde towards steering vector
+                    ELSE MATH_vecRotToVec(steeringVector:VECTOR, SHIP:SRFPROGRADE:VECTOR, AoADynamicLimit).
   RETURN FALSE.     // we're still doing stuff, send false.
 }
 // get gravitational constant at specific altitude
