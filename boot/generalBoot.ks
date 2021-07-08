@@ -290,6 +290,7 @@ FUNCTION evt_checkMissionUpdate {
       
       // move mission file on archive to new location
       MOVEPATH(archivePath, executedDir + "/mission." + cnt + ".ks").
+      addMissionCounter().
       
       IF EXISTS(stageBackup)
       {
