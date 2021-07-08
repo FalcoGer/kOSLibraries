@@ -36,9 +36,10 @@
 // }
 
 FUNCTION pid_log {
-  DECLARE PARAMETER PID
-  DECLARE PARAMETER path.
-  DECLARE PARAMETER header.
+  PARAMETER PID.
+  PARAMETER path.
+  PARAMETER header.
+  PARAMETER startTime IS 0.
   
   IF header {
     LOG "# PID LOG" TO path.
@@ -48,21 +49,21 @@ FUNCTION pid_log {
     LOG "# min: " + PID:MINOUTPUT TO path.
     LOG "# max: " + PID:MAXOUTPUT TO path.
     LOG "# epsilon: " + PID:EPSILON TO path.
-    LOG "#T, DeltaT, SP, INPUT, ERROR, ERRORSUM, CHANGERATE, P, I, D, OUT".
+    LOG "#T, DeltaT, SP, INPUT, ERROR, ERRORSUM, CHANGERATE, P, I, D, OUT" TO path.
   }
   
-  SET line TO LIST(
-    TIME:SECONDS,
-    TIME:SECONDS-PID:LASTSAMPLETIME,
+  LOCAL line IS LIST(
+    ROUND(TIME:SECONDS - startTime,4),
+    ROUND(TIME:SECONDS - PID:LASTSAMPLETIME,4),
     PID:SETPOINT,
     PID:INPUT,
     PID:ERROR,
     PID:ERRORSUM,
     PID:CHANGERATE,
-    PID:PTERM,
-    PID:ITERM,
-    PID:DTERM,
-    PID:OUTPUT
+    ROUND(PID:PTERM, 5),
+    ROUND(PID:ITERM, 5),
+    ROUND(PID:DTERM, 5),
+    ROUND(PID:OUTPUT,5)
   ).
   
   LOG line:JOIN(",") TO path.
