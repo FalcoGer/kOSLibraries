@@ -17,7 +17,7 @@ aircraft:
 - fly to waypoint
 - autoland:
     PID throttle for AoA keeping
-    PID pitch for glide slope keeping (3°)
+    PID pitch for glide slope keeping (3°, VVI should point at landing point)
     PID roll for 0 roll keeping
     PID yaw for heading keeping to touchdown
     check bounding box for ground contact
