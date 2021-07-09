@@ -17,11 +17,11 @@ SET MNV_WARP_IS_SET TO FALSE.
 // does not stage automatically!
 FUNCTION MNV_nodeExec {
   PARAMETER autowarp IS false.
-  PARAMETER maxDvDeviationEngine IS 3.0.  // when this speed is reached
-                                          // and the maneuver node is more than 90° behind the craft, then
-                                          // switch to RCS or delete maneuver as completed.
-  PARAMETER maxDvDeviationRCS IS 0.05.    // when the maneuver is considered completed.
   PARAMETER useRCS is FALSE.              // when true will use RCS translation for fine tuning.
+  PARAMETER maxDvDeviationEngine IS 2.0.  // when this speed is reached
+                                          // and the maneuver node is more than maxAngleEngine behind the craft, then
+                                          // switch to RCS or consider maneuver completed.
+  PARAMETER allowedDvError IS 0.01.       // when the maneuver is considered completed.
   
   LOCAL minAngleEngine IS 2.              // minimum angle between ship-facing and maneuver to keep
                                           // while doing large burns above maxDvDeviationEngine
@@ -30,6 +30,7 @@ FUNCTION MNV_nodeExec {
                                           // is reached then engine burn is completed
   LOCAL safetyMarginToStart IS 30.        // time in seconds that is subtracted from warpto time.
   // check if a node exists
+  
   IF HASNODE {
     LOCK STEERING TO NEXTNODE:BURNVECTOR.   // steer to maneuver node
     LOCK mnvDv TO NEXTNODE:BURNVECTOR:MAG.  // fetch maneuver dV
@@ -41,33 +42,33 @@ FUNCTION MNV_nodeExec {
     IF TIME:SECONDS > startTime
     {
       // Do engine burn
-      IF
-          // only use main throttle to chase node if node is within minAngleEngine of ship facing
-          (deltaAngle < minAngleEngine AND (mnvDv > maxDvDeviationEngine))
-          // or if there is only a tiny bit of maneuver left and the node is within maxAngleEngine
-          OR (deltaAngle < maxAngleEngine) AND (mnvDv <= maxDvDeviationEngine)
-      {
-        // throttle back according to the time to maneuver node.
-        // throttle at 3s and more is full, anything less is proportional to time left.
-        // LOCK THROTTLE TO MIN(mnvTime / 3, 1).
-        LOCK THROTTLE TO MNV_throttleStepping(mnvTime, 0).
-      }
-      ELSE {
-        // outside of engine burn parameters, continue steering until back to minAngleEngine
-        // or maybe maneuver is completed.
-        LOCK THROTTLE TO 0.
-      }
+      // only use main throttle to chase node if node is
+      // within minAngleEngine of ship facing
+      LOCK engineBurnRequired TO
+          ((deltaAngle < minAngleEngine) AND (mnvDv > allowedDvError))
+        OR
+          // or if there is only a tiny bit of maneuver left
+          // and the node is within maxAngleEngine, and rcs is not selected
+          ((deltaAngle < maxAngleEngine) AND (mnvDv <= maxDvDeviationEngine) AND NOT useRCS).
+      
+      LOCK THROTTLE TO CHOOSE
+        MIN(mnvTime / 1, 1)
+        IF engineBurnRequired 
+        ELSE 0.
       
       // check if engine stage is done
-      IF deltaAngle > maxAngleEngine AND (mnvDv < maxDvDeviationEngine) {
+      IF NOT engineBurnRequired {
         // abort engine if mnvDv reached and angle above maximum allowed
         LOCK STEERING TO "kill".
         IF NOT useRCS {
+          UNLOCK THROTTLE.
+          UNLOCK STEERING.
           REMOVE NEXTNODE.
+          WAIT 0.03.
         }
         ELSE {
-          // RCS required for final correction to below maxDvDeviationRCS
-          IF mnvDv < maxDvDeviationRCS // need correction still?
+          // RCS required for final correction to below allowedDvError
+          IF mnvDv < allowedDvError // need correction still?
           {
             IF NOT RCS { RCS ON. }
             MNV_translation(NEXTNODE:BURNVECTOR).
@@ -75,17 +76,20 @@ FUNCTION MNV_nodeExec {
           else {
             // RCS correction burn completed.
             RCS OFF.
+            UNLOCK THROTTLE.
+            UNLOCK STEERING.
             REMOVE NEXTNODE.
+            WAIT 0.03.
           }
         }
       }
     }
-    ELSE {
+    ELSE {  // start time not yet reached.
       IF
         // check if autowarp is enabled
         autowarp
         // check if we are far enough away from start
-        AND TIME:SECONDS > startTime - safetyMarginToStart
+        AND TIME:SECONDS < (startTime - safetyMarginToStart)
         // check if we are pointing in the right direction
         AND deltaAngle < minAngleEngine
       {
@@ -94,19 +98,30 @@ FUNCTION MNV_nodeExec {
           SET MNV_WARP_IS_SET TO TRUE.
         }
       }
-      ELSE {
+      ELSE IF MNV_WARP_IS_SET {
+        // condition is no longer true, stop warp
+        KUNIVERSE:TimeWarp:CANCELWARP().
+        // wait for condition to fix itself so not to constantly
+        // start and stop warping.
         SET MNV_WARP_IS_SET TO FALSE.
+        WAIT 1.
       }
-    }  
+    }
+  }
+  ELSE  // no node exists
+  {
+    UNLOCK STEERING.
+    UNLOCK THROTTLE.
   }
   // if there are still nodes, then say we're still doing stuff by sending FALSE
   // send true when we're done maneuvering.
+  
   RETURN NOT HASNODE.
 }
 
 FUNCTION MNV_getNodeStartTime {
   PARAMETER n.
-  RETURN TIME:SECONDS + n:ETA - MNV_getTimeForFixedDVManeuver(n:BURNVECTOR:MAG).
+  RETURN TIME:SECONDS + n:ETA - (MNV_getTimeForFixedDVManeuver(n:BURNVECTOR:MAG) / 2).
 }
 
 // get time for maneuver with constant force mass ejection using the rocket equation
@@ -125,7 +140,7 @@ FUNCTION MNV_getTimeForFixedDVManeuver {
   // Rocket equation
   LOCAL f IS engineTotalThrust * 1000.  // [kg * m/s^2] - thrust is in kN, we need N
   LOCAL m IS SHIP:MASS * 1000.          // [kg]         - ship mass is in metric tonns, we need kg
-  LOCAL e IS CONSTANTS:E.               // [1]          - for simplicity
+  LOCAL e IS CONSTANT:E.                // [1]          - for simplicity
   LOCAL p IS engineISP.                 // [s]          - for simplicity
   LOCAL g IS BODY:MU/BODY:RADIUS^2.     // [m/s^2]      - gravitational constant.
   
