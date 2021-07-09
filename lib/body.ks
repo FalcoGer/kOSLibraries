@@ -12,7 +12,6 @@ FUNCTION BDY_ascendGuidance {
   PARAMETER AoALimit IS 5.          // degrees of AoA deviation, is increased as atmos pressure decreases
   
   IF desiredAltitude < SHIP:ORBIT:APOAPSIS {
-    LOCK THROTTLE TO 0.
     UNLOCK THROTTLE.
     IF BODY:ATM:EXISTS AND ALTITUDE < BODY:ATM:HEIGHT
     {
@@ -40,16 +39,18 @@ FUNCTION BDY_ascendGuidance {
   
   // launch from ground
   IF ALT:RADAR < 500 {
-    LOCK STEERING TO HEADING (HDG, 90).
+    LOCK STEERING TO HEADING(HDG, 90). // straight up
     LOCK THROTTLE TO 1.
     RETURN FALSE.       // certainly not done here, send false.  
   }
   
   // maintain constant TWR burn.
   LOCAL maxTWR IS SHP_getMaxTWR().
+  LOCK altRatio TO ALTITUDE/desiredAltitude.
   IF NOT (maxTWR < 0.001)
   {
-    LOCK THROTTLE TO desiredTwr / maxTWR.
+    // throttle down as approaching desired altitude.
+    LOCK THROTTLE TO MIN((desiredTwr / maxTWR), MAX(1 - altRatio, 0)).
   }
   ELSE
   {
@@ -59,7 +60,7 @@ FUNCTION BDY_ascendGuidance {
   // compute desired pitch angle via ratio altitude/desiredAltitude
   PRINT "ECC: " + ROUND(SHIP:ORBIT:ECCENTRICITY,3) AT (70,10).
   
-  LOCK altRatio TO ALTITUDE/desiredAltitude.
+  
   LOCK desiredPitch TO 90 - ((altRatio^0.3) * 90).
   PRINT "Desired Pitch: " + ROUND(desiredPitch,2) AT (70,11).
   LOCK steeringVector TO HEADING(HDG, desiredPitch).
