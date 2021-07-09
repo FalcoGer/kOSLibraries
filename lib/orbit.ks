@@ -1,4 +1,6 @@
 //returns direction with vector=AN vector, up=normal
+REQUIRE("lib/math.ks").
+
 function ORB_getDir {
   PARAMETER refNRM IS V(0,1,0).
   
@@ -8,7 +10,7 @@ function ORB_getDir {
 }
 
 function ORB_getTimeToTA {
-  PARAMETER ta
+  PARAMETER ta.
   PARAMETER orbit_in IS ship:orbit.
   
   LOCAL tanow TO orbit_in:TRUEANOMALY.
@@ -64,7 +66,7 @@ FUNCTION ORB_hohmann {
 
 FUNCTION ORB_BiEliptical {
   PARAMETER desiredAltitude.
-  PARAMETER rbCap.
+  PARAMETER rbCap.            // altitude of the transfer elipsis
   
   LOCAL r1 IS SHIP:ALTITUDE + BODY:RADIUS.
   LOCAL r2 IS desiredAltitude + BODY:RADIUS.
@@ -160,14 +162,45 @@ FUNCTION ORB_transferOrbit {
   }
 }
 
+FUNCTION ORB_cirularize {
+  PARAMETER mnvTime.
+  
+  LOCAL dV IS LIST(mnvTime,0,0,0).
+  LOCAL numSteps IS 10.
+  // calculate to 0.25m/s precision, starting with 256m/s step sizes
+  // don't alter time value (step size 0)
+  // don't alter normal value. this will not be required (incl change) and will fuck up maneuvers.
+  LOCAL dVStep IS LIST(0, 2^(numSteps-2), 0, 2^(numSteps-2)).
+
+  SET dV TO MATH_hillClimb(dV, dVStep, ORB_fitnessBestEcc@, numSteps).
+  LOCAL n IS NODE(dV[0], dV[1], dV[2], dV[3]).
+  ADD n.
+}
+
+FUNCTION ORB_fitnessBestEcc {
+  PARAMETER nodeValue.
+  // generate node from data.
+  LOCAL n IS NODE(nodeValue[0], nodeValue[1], nodeValue[2], nodeValue[3]).
+  ADD n.        // need to add node to flight plan in order to check out how good it is.
+  WAIT 0.03.    // maybe wait for ksp to figure shit out with this node?
+  // best orbit is 0 eccentricity.
+  // need to round because eccentricity calculation isn't exact
+  // if left as is, hill climbing will forever loop because it finds the same maneuver plan is giving ever so slightly different (aka better) value.
+  LOCAL fitness IS -1 * ROUND(n:ORBIT:ECCENTRICITY, 6).
+  REMOVE n.
+  RETURN fitness.
+}
+
 FUNCTION ORB_changeAP {
   PARAMETER newAPAlt.
+  PARAMETER mnvTime IS SHIP:ORBIT:ETA:PERIAPSIS.
   
   // TODO
 }
 
 FUNCTION ORB_changePA {
   PARAMETER newPAAlt.
+  PARAMETER mnvTime IS SHIP:ORBIT:ETA:APOAPSIS.
   
   // TODO
 }
@@ -186,17 +219,17 @@ FUNCTION ORB_matchPlanes {
 FUNCTION ORB_changeIncl {
   PARAMETER t.                  // at which time the inclination change is performed
                                 // needs to be accurate
-  PARAMETER deltaInc            // how much inclination to add at that time
+  PARAMETER deltaInc.           // how much inclination to add at that time
                                 // will perform NORMAL UP burn
   
   // get orbital speed at the time as a vector
-  LOCAL orbSpeed IS IS V(0,0,VELOCITYAT(SHIP, t)).  // all orbital speed is always prograde
+  LOCAL orbSpeed IS V(0,0,VELOCITYAT(SHIP, t)).  // all orbital speed is always prograde
   
   // we want our prograde vector to change by deltaInc towards normal
   // we also want our orbital speed to remain as it is
   // we get our orbital speed and rotate it towards normal by deltaInc
   // we can take the normal right now as it will stay normal to the orbital plane until the maneuver (unless we change the orbital plane until then).
-  LOCAL desiredOrbitalSpeed MATH_vecRotToVec(orbSpeed, SHIP:NORMAL).
+  LOCAL desiredOrbitalSpeed IS MATH_vecRotToVec(orbSpeed, SHIP:NORMAL).
   
   // get desired burn by subtracting the vectors
   LOCAL desiredManeuver IS desiredOrbitalSpeed - orbSpeed.
