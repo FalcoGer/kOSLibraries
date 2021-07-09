@@ -25,8 +25,8 @@ FUNCTION TELEM_write {
     
     WHEN CHECK_CONNECTION() THEN {
       LOCAL highchartsContent IS OPEN("0:/highcharts.html"):READALL:STRING.
-      SET highchartsContent TO highchartsContent:REPLACE("INSERT_FILEPATH_HERE", telemetryName + ".js").
-      SET highchartsContent TO highchartsContent:REPLACE("INSERT_TELEMETRYNAME_HERE", telemetryName).
+      SET highchartsContent TO highchartsContent:REPLACE("INSERT_FILEPATH_HERE", telemetryName + ".js")
+                                                :REPLACE("INSERT_TELEMETRYNAME_HERE", telemetryName).
       IF EXISTS(pathToTelemHTML) {
         DELETEPATH(pathToTelemHTML).
       }

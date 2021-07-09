@@ -58,6 +58,8 @@ FUNCTION MATH_APROX {
 
 // finds neighbors and then determines the best fitness. for each one until best neighbor is found
 // then divide step size by 2 and repeat until numOfSteps is reached.
+// pass a step size of 0 to just pass a particular value in the data along as an
+// argument in the fitness function.
 FUNCTION MATH_hillClimb {
   PARAMETER initialData.        // list of initial data points with best guess
   PARAMETER stepSize.           // list of step sizes
@@ -65,38 +67,56 @@ FUNCTION MATH_hillClimb {
   PARAMETER numOfSteps IS 1.    // how often to repeat finding the best fitting datapoints
   
   LOCAL bestFit IS initialData.
-  FROM { LOCAL stepNum IS numOfSteps. } UNTIL (stepNum <= 0) STEP { SET stepNum TO stepNum - 1. } DO {
+  LOCAL bestFitFitness IS fitnessFunction(bestFit).
+  
+  FROM { LOCAL stepNum IS 0. } UNTIL (stepNum >= numOfSteps) STEP { SET stepNum TO stepNum + 1. } DO {
     LOCAL betterFound IS TRUE.
-    UNTIL betterFound {           // until best neighbor with current step size is found.
-      SET betterFound TO FALSE.   // we didn't find anything yet.
+    UNTIL NOT betterFound {           // until best neighbor with current step size is found.
+      SET betterFound TO FALSE.       // we didn't find anything yet.
       
       // generate all neighbors by
       // going over every dimension of the data
       // and adding/sutbracting step size for that dimension
-      // going over all neighbors in the future will keep those adjustments in mind.
+      // going over all neighbors in future loops will keep those adjustments in mind, adding the neighbors of those nodes.
       LOCAL neighbors IS LIST().    // list of datapoint lists
-      neighbors:ADD(bestFit).
-      FROM { LOCAL dim IS 0. } UNTIL ( dim >= data:LENGTH() ) STEP { SET dim TO dim + 1. } DO {
-        FROM { LOCAL idx IS 0. } UNTIL ( idx >= neighbors:LENGTH() ) STEP { SET idx TO idx + 1. } DO {
-          LOCAL newNeighbor IS neighbors[idx].
-          SET newNeighbor[dim] TO newNeighbor[dim] - stepSize[dim].
-          neighbors:ADD(newNeighbor).
-          SET newNeighbor[dim] TO newNeighbor[dim] + (stepSize[dim] * 2).
-          neighbors:ADD(newNeighbor).
+      neighbors:ADD(bestFit).       // add the current best fit as a starting point
+      FROM { LOCAL dim IS 0. } UNTIL ( dim >= bestFit:LENGTH() ) STEP { SET dim TO dim + 1. } DO {
+        // only find neighbors if step size is not 0.
+        // this allows to pass arguments to the fitness function in the data
+        // by providing 0 step size for that dimension
+        // skipping those points will run faster.
+        IF (stepSize[dim] <> 0) {
+          LOCAL numNeighbors IS neighbors:LENGTH(). // store here to prevent endless loop. as more are added in the loop for every existing neighbor so far.
+          FROM { LOCAL idx IS 0. } UNTIL ( idx >= numNeighbors ) STEP { SET idx TO idx + 1. } DO {
+            // need a copy so not to affect members in the list already.
+            LOCAL newNeighbor IS neighbors[idx]:COPY. 
+            SET newNeighbor[dim] TO newNeighbor[dim] - stepSize[dim].
+            neighbors:ADD(newNeighbor).
+            
+            SET newNeighbor TO neighbors[idx]:COPY.
+            SET newNeighbor[dim] TO newNeighbor[dim] + stepSize[dim].
+            neighbors:ADD(newNeighbor).
+          }
         }
       }
       
       // find the best one
       FOR neighbor IN neighbors {
-        IF fitnessFunction(neighbor) >= fitnessFunction(bestFit) {
+        LOCAL neighborFitness IS fitnessFunction(neighbor).
+        IF neighborFitness > bestFitFitness {
           // better neighbor found
-          SET betterFound TO TRUE.    // continue with current step size.
-          SET bestFit TO neighbor.    // this is our new best.
+          SET betterFound TO TRUE.          // continue with current step size.
+          SET bestFit TO neighbor.          // this is our new best.
+          SET bestFitFitness TO neighborFitness.
         }
       }
     }
     
+    // no better fit found for current step size
     // adjust step size
+    // could do in place calculation with
+    // data +/- stepSize / 2^(stepNum)
+    // but that's more calculation in the loop. this is probably faster.
     FROM {LOCAL dim IS 0.} UNTIL ( dim >= stepSize:LENGTH() ) STEP {SET dim TO dim + 1.} DO {
       SET stepSize[dim] TO stepSize[dim] / 2.
     }
