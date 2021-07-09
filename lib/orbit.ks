@@ -114,7 +114,7 @@ FUNCTION ORB_BiElipticalTransferDv {
   
   // first prograde burn
   LOCAL v1 IS SQRT((2 * u / r1) - u / a1) - SQRT(u / r1).
-  // second burn brings PE of new orbit to desired altitude
+  // second burn brings PE of new orbit to desired altitude, may be positive or negative
   LOCAL v2 IS SQRT((2 * u / rb) - u / a2) - SQRT((2 * u / rb) - u / a1).
   // third burn is retrograde and circularizes.
   LOCAL v3 IS SQRT((2 * u / r2) - u / a2) - SQRT(u / r2).
@@ -151,12 +151,12 @@ FUNCTION ORB_transferOrbit {
      OR ratio > 12 AND minimal > 815.81
   {
     // bi-eliptical is more efficient
-    ORB_BiEliptical(desiredAltitude, rbCap).
+    RETURN ORB_BiEliptical(desiredAltitude, rbCap).
   }
   ELSE
   {
     // hohmann is more efficient.
-    ORB_hohmann(desiredAltitude).
+    RETURN ORB_hohmann(desiredAltitude).
   }
 }
 
