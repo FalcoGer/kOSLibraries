@@ -120,15 +120,13 @@ FUNCTION mission_runner
   IF CORE:VOLUME:EXISTS (missionScript) {
     // will declare functions and populate sequence with function getSequence()
     RUNPATH (missionScript).
-	SET mission["sequence"] TO getSequence().
+    SET mission["sequence"] TO getSequence().
   }
   ELSE IF CORE:VOLUME:EXISTS (missionScript + "m") {
     // will declare functions and populate sequence with function getSequence()
     RUNPATH (missionScript + "m").
-	SET mission["sequence"] TO getSequence().
+    SET mission["sequence"] TO getSequence().
   }
-  
-  SET mission["currentStage"] TO "init".
   
   // ========================================================
   
@@ -136,6 +134,10 @@ FUNCTION mission_runner
   // otherwise leave mission stage at "init".
   IF CORE:VOLUME:EXISTS(stageBackup) {
     SET mission["currentStage"] TO OPEN(stageBackup):READALL:STRING.
+  }
+  ELSE
+  {
+    SET mission["currentStage"] TO "init".
   }
   
   // ========================================================
