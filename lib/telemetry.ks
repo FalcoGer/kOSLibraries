@@ -17,11 +17,9 @@ FUNCTION TELEM_write {
     
     LOCAL header IS "".
     FOR key in dataRow:KEYS {
-      SET header TO header + "'" + key + "',".
+      SET header TO header + ",'" + key + "'".
     }
-    // remove last, trailing colon
-    SET header TO header:SUBSTRING(0, header:LENGTH() - 1).
-    LOG "var data = [[" + header + "]," TO pathToTelemJS.
+    LOG "var data = [['Time'" + header + "]," TO pathToTelemJS.
     
     WHEN CHECK_CONNECTION() THEN {
       LOCAL highchartsContent IS OPEN("0:/highcharts.html"):READALL:STRING.
@@ -36,12 +34,10 @@ FUNCTION TELEM_write {
   }
   
   // write telemetry
-  LOCAL line IS "[".
+  LOCAL line IS "[" + ROUND(getMissionTime(), 5).
   FOR value IN dataRow:VALUES {
-    SET line TO line + value + ",".
+    SET line TO line + "," + value.
   }
-  // remove trailing colon
-  SET line TO line:SUBSTRING(0, line:LENGTH() - 1).
   SET line TO line + "],".
   
   LOG line TO pathToTelemJS.
@@ -51,6 +47,17 @@ FUNCTION TELEM_finish {
   PARAMETER telemetryName.
   PARAMETER directory.
   
-  LOCAL pathToTelemJS IS directory + "/" + telemetryName + ".js".
-  LOG "];" TO pathToTelemJS.
+  IF directory:SUBSTRING(0,2) = "0:"
+  {
+    WHEN CHECK_CONNECTION() THEN {
+      LOCAL pathToTelemJS IS directory + "/" + telemetryName + ".js".
+      LOG "];" TO pathToTelemJS.
+    }
+  }
+  ELSE
+  {
+    LOCAL pathToTelemJS IS directory + "/" + telemetryName + ".js".
+    LOG "];" TO pathToTelemJS.
+  }
+  
 }

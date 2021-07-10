@@ -2,6 +2,8 @@
   Highcharts Visualization of KOS Data
   This page assumes that the first column of data is a time-series, but if you
   choose to record other information, it should pick up the appropriate headers
+  
+  Documentation: https://www.highcharts.com/docs/index
 -->
 
 <!DOCTYPE html>
@@ -16,45 +18,72 @@
     <div id="container" style="position:absolute;bottom:0px;right:0px;left:0px;top:0px;"></div>
     <script>
       $(function () {
-
-      // Reformat the data from the ascent script into a format suitable for Highcharts
-      var seriesData = []
-      data[0].forEach(function(name) {
-        seriesData.push({name: name, data: []});
-      });
-      data.slice(1).forEach(function(datum) {
-        datum.forEach(function(item, i) {
-          seriesData[i].data.push(item);
-        });
-      });
-
-      $('#container').highcharts({
-        chart: {
-          zoomType: 'x'
-        },
-        title: {
-          text: 'INSERT_TELEMETRYNAME_HERE Telemetry',
-          x: -20
-        },
-        xAxis: {
-          categories: seriesData[0].data.map(Math.round)
-        },
-        yAxis: {
+        // Reformat the data into a format suitable for Highcharts
+        var seriesData = [];
+        
+        var singleYAxis = {
           plotLines: [{
             value: 0,
             width: 1,
             color: '#808080'
           }]
-        },
-        legend: {
-          layout: 'vertical',
-          align: 'right',
-          verticalAlign: 'middle',
-          borderWidth: 3
-        },
-        series: seriesData.slice(1)
+        };
+        
+        var yAxis = [];
+        var multipleAxis = false;
+        
+        if (multipleAxis) {
+          // use multiple axis
+          data[0].forEach(function(name, i) {
+            seriesData.push({name: name, yAxis: (i-1), data: []});
+            if (i > 0) {
+              // hacky trick to get a copy of the json object.
+              // otherwise would edit reference if just assigning singleYAxis
+              var newAxis = JSON.parse(JSON.stringify(singleYAxis));
+              newAxis['title'] = { text: name };
+              yAxis.push(newAxis);
+            }
+          });
+        } else {
+          // use single axis
+          yAxis.push(singleYAxis);
+          data[0].forEach(function(name, i) {
+            seriesData.push({name: name, yAxis: 0, data: []});
+          });
+        }
+        
+        // for every datum add it to the data field of the series data.
+        data.slice(1).forEach(function(datum) {
+          datum.forEach(function(item, i) {
+            seriesData[i].data.push([datum[0],item]);
+          });
+        });
+        
+        // call highcharts
+        $('#container').highcharts({
+          chart: {
+            zoomType: 'x',
+            type: 'spline'
+          },
+          title: {
+            text: 'INSERT_TELEMETRYNAME_HERE Telemetry',
+            x: -20
+          },
+          xAxis: {
+            title: {
+              text: 'Mission Time'
+            }
+          },
+          yAxis: yAxis,
+          legend: {
+            layout: 'vertical',
+            align: 'right',
+            verticalAlign: 'middle',
+            borderWidth: 3
+          },
+          series: seriesData.slice(1)
+        });
       });
-    });
     </script>
   </body>
 </html>
