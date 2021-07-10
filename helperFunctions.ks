@@ -105,3 +105,16 @@ FUNCTION addMissionCounter
   DELETEPATH(cntFilePath).
   CREATE(cntFilePath):WRITE("" + (cnt + 1)).
 }
+
+FUNCTION getMissionTime
+{
+  RETURN TIME:SECONDS - getMissionStartTime().
+}
+
+FUNCTION getMissionStartTime
+{
+  RETURN OPEN("/starttime.txt"):READALL:STRING():TONUMBER().
+}
+
+// save the current time as the start time for this mission if it doesn't already exist, so that it can be recovered later.
+IF NOT EXISTS("/starttime.txt") { LOG TIME:SECONDS TO "/starttime.txt". }
