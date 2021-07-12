@@ -2,7 +2,7 @@
 
 REQUIRE("lib/test.ks").
 
-GLOBAL MATH_INFINITY IS 2^64.
+GLOBAL MATH_INFINITY IS 2^1023.
 
 // rotate a vector towards another vector by a specified angle (deg)
 FUNCTION MATH_vecRotToVec {
@@ -125,4 +125,29 @@ FUNCTION MATH_hillClimb {
   }
   
   RETURN bestFit.
+}
+
+// determines distance from a point to a plane defined by normal vector out of the plane and a point q on the plane.
+FUNCTION MATH_distancePointToPlane {
+  PARAMETER p.      // point as 3d vector
+  PARAMETER nVec.   // normal vector of the plane
+  PARAMETER q.      // point from which the normal vector protrudes to define the plane
+  
+  SET nVec TO nVec:NORMALIZED.
+  
+  // vector from q to p
+  LOCAL q2p IS p - q.
+  
+  // exclude normal vector
+  LOCAL q2under_p IS VXCL(nVec, q2p) + q.
+  LOCAL d IS (p - q2under_p):MAG.        // pure distance
+  
+  // figure out if below or above, diretion of nVec being up
+  IF ((p+nVec)-q):MAG < q2p:MAG {
+    // if adding the normal vector to the point decreases the distance
+    // then the point is below plane
+    SET d TO d * -1.
+  }
+  
+  RETURN d.
 }
