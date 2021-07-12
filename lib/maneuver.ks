@@ -121,7 +121,7 @@ FUNCTION MNV_nodeExec {
 
 FUNCTION MNV_getNodeStartTime {
   PARAMETER n.
-  RETURN TIME:SECONDS + n:ETA - (MNV_getTimeForFixedDVManeuver(n:BURNVECTOR:MAG) / 2).
+  RETURN n:TIME - (MNV_getTimeForFixedDVManeuver(n:BURNVECTOR:MAG) / 2).
 }
 
 // get time for maneuver with constant force mass ejection using the rocket equation
@@ -146,4 +146,14 @@ FUNCTION MNV_getTimeForFixedDVManeuver {
   
   LOCAL t IS g * m * p * (1 - e^(-dV / (g * p))) / f.
   RETURN t.
+}
+
+FUNCTION MNV_translation {
+  PARAMETER vector.
+  
+  IF vector:MAG > 1 { SET vector TO vector:NORMALIZED. }
+  
+  SET SHIP:CONTROL:STARBOARD  TO vector * SHIP:FACING:STARVECTOR.
+  SET SHIP:CONTROL:FORE       TO vector * SHIP:FACING:FOREVECTOR.
+  SET SHIP:CONTROL:TOP        TO vector * SHIP:FACING:TOPVECTOR.
 }

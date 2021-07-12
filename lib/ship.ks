@@ -71,3 +71,9 @@ FUNCTION SHP_burnout {
   RETURN SHP_burnedOutEngines():LENGTH() > 0.
 }
 
+FUNCTION SHP_throttleStepping {
+  PARAMETER current.
+  PARAMETER setPoint.
+  
+  RETURN MAX(MIN(1 - (current / setPoint * 0.99), 1), 0).
+}

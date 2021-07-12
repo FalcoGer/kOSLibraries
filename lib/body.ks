@@ -70,6 +70,7 @@ FUNCTION BDY_ascendGuidance {
                     ELSE MATH_vecRotToVec(steeringVector:VECTOR, SHIP:SRFPROGRADE:VECTOR, AoADynamicLimit).
   RETURN FALSE.     // we're still doing stuff, send false.
 }
+
 // get gravitational constant at specific altitude
 FUNCTION BDY_getGAtAltitude {
   PARAMETER bdy.

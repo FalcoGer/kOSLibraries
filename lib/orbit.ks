@@ -57,11 +57,11 @@ FUNCTION ORB_hohmann {
   }
   
   LOCAL n1 IS NODE(SHIP:ORBIT:ETA:PERIAPSIS, 0, 0, hohmann[0]).
-  WAIT 0.2. // wait for orbits to update
-  LOCAL n2 IS NODE(n1:ORBIT:ETA:APOAPSIS, 0, 0, hohmann[1]).
   ADD n1.
+  WAIT 0.03. // wait for orbits to update
+  LOCAL n2 IS NODE(n1:ORBIT:ETA:APOAPSIS, 0, 0, hohmann[1]).
   ADD n2.
-  WAIT 0.2.
+  WAIT 0.03.
 }
 
 FUNCTION ORB_BiEliptical {
@@ -80,13 +80,14 @@ FUNCTION ORB_BiEliptical {
   
   // create nodes and add them.
   LOCAL n1 IS NODE(ETA:PERIAPSIS, 0, 0, biecliptic[0]).
-  WAIT 0.2.
-  LOCAL n2 IS NODE(n1:ORBIT:ETA:APOAPSIS, 0, 0, v2).
-  WAIT 0.2.
-  LOCAL n3 IS NODE(n2:ORBIT:ETA:PERIAPSIS, 0, 0, -1 * v3).
   ADD n1.
+  WAIT 0.03.
+  LOCAL n2 IS NODE(n1:ORBIT:ETA:APOAPSIS, 0, 0, v2).
   ADD n2.
+  WAIT 0.03.
+  LOCAL n3 IS NODE(n2:ORBIT:ETA:PERIAPSIS, 0, 0, -1 * v3).
   ADD n3.
+  WAIT 0.03.
 }
 
 FUNCTION ORB_hohmannDv {
@@ -205,16 +206,14 @@ FUNCTION ORB_changePA {
   // TODO
 }
 
-FUNCTION ORB_matchPlanes {
-  PARAMETER tgt.
+// get a vector pointing up from the orbital plane of an orbitable (CCW = UP)
+FUNCTION ORB_getNormal {
+  PARAMETER orbitable IS SHIP.
   
-  // TODO
-  // get normal vector of target orbit plane
-  // feed that normal vector into ORB_getTimeToAN or DN
-  // take the higher/slower of the two and add ORB_changeIncl
+  RETURN VCRS(VELOCITYAT(orbitable, TIME:SECONDS + orbitable:ORBIT:PERIOD / 4):ORBIT, VELOCITYAT(orbitable, TIME:SECONDS):ORBIT):NORMALIZED.
 }
 
-// creates a maneuver node at the specified time to change the inclination
+// creates a maneuver at the specified time to change the inclination
 // needs to be executed at the correct time (AN or DN)
 FUNCTION ORB_changeIncl {
   PARAMETER t.                  // at which time the inclination change is performed
@@ -223,19 +222,20 @@ FUNCTION ORB_changeIncl {
                                 // will perform NORMAL UP burn
   
   // get orbital speed at the time as a vector
-  LOCAL orbSpeed IS V(0,0,VELOCITYAT(SHIP, t)).  // all orbital speed is always prograde
+  // all orbital speed is prograde from the ship's point of view.
+  LOCAL orbSpeed IS V(0,0,VELOCITYAT(SHIP, t):ORBIT:MAG).
+  LOCAL normalVector IS ORB_getNormal().
   
   // we want our prograde vector to change by deltaInc towards normal
   // we also want our orbital speed to remain as it is
   // we get our orbital speed and rotate it towards normal by deltaInc
-  // we can take the normal right now as it will stay normal to the orbital plane until the maneuver (unless we change the orbital plane until then).
-  LOCAL desiredOrbitalSpeed IS MATH_vecRotToVec(orbSpeed, SHIP:NORMAL).
+  LOCAL desiredOrbitalSpeed IS MATH_vecRotToVec(orbSpeed, normalVector, deltaInc).
   
   // get desired burn by subtracting the vectors
   LOCAL desiredManeuver IS desiredOrbitalSpeed - orbSpeed.
   
-  // node time, radial, normal, prograde
-  ADD NODE(t, desiredManeuver[0],desiredManeuver[1],desiredManeuver[2]).
+  // radial, normal, prograde
+  RETURN LIST(desiredManeuver:x, desiredManeuver:y, desiredManeuver:z).
 }
 
 FUNCTION ORB_changeInclEfficient {
@@ -251,21 +251,4 @@ FUNCTION ORB_changeInclEfficient {
   // needs only to adjust prograde/retrograde for 
   
   // TODO
-}
-
-FUNCTION ORB_translation {
-  PARAMETER vector.
-  
-  IF vector:MAG > 1 { SET vector TO vector:NORMALIZED. }
-  
-  SET SHIP:CONTROL:STARBOARD  TO vector * SHIP:FACING:STARVECTOR.
-  SET SHIP:CONTROL:FORE       TO vector * SHIP:FACING:FOREVECTOR.
-  SET SHIP:CONTROL:TOP        TO vector * SHIP:FACING:TOPVECTOR.
-}
-
-FUNCTION ORB_throttleStepping {
-  PARAMETER current.
-  PARAMETER setPoint.
-  
-  RETURN 1 - (current / target * 0.99).
 }
