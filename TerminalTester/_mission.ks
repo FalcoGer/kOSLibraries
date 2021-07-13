@@ -30,8 +30,8 @@ FUNCTION printingTest {
   
   DELETEPATH("currentStage.txt").
   
-  TERM_print("Printing 3 lines to Test 0.")
-  TERM_print("Line 1 should drop off the top.")
+  TERM_print("Printing 3 lines to Test 0.").
+  TERM_print("Line 1 should drop off the top.").
   TERM_print("Press RCS to continue.").
   
   UNTIL RCS { WAIT 1. }
@@ -41,7 +41,7 @@ FUNCTION printingTest {
   TERM_print("Test 0 line 3", "Test 0").
   
   TERM_print("Messages should have been dropped off the top.").
-  TERM_PRINT("Printing some text to Test 2.")
+  TERM_PRINT("Printing some text to Test 2.").
     
   TERM_print("Printing some text", "Test 2").
   TERM_print("Press RCS to clear.", "Test 2").
@@ -107,7 +107,7 @@ FUNCTION printingTest {
   TERM_print("B = 6", "Test 2", 6).
   
   TERM_print("Test 2 lines 5 and 6 should contain A = 5 and B = 6 with no other characters. in those lines.").
-  TERM_print("The next test will delete Test 3 region.")
+  TERM_print("The next test will delete Test 3 region.").
   TERM_print("Press RCS to continue.").
   
   TERM_PRINT("This Test Region will be deleted upon pressing RCS", "Test 3").
