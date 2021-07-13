@@ -11,22 +11,6 @@ FUNCTION BDY_ascendGuidance {
   PARAMETER desiredTWR IS 1.8.      // TWR to use during ascend
   PARAMETER AoALimit IS 5.          // degrees of AoA deviation, is increased as atmos pressure decreases
   
-  IF desiredAltitude < SHIP:ORBIT:APOAPSIS {
-    UNLOCK THROTTLE.
-    IF BODY:ATM:EXISTS AND ALTITUDE < BODY:ATM:HEIGHT
-    {
-      // coasting to end of atmoshpere with minimum drag
-      LOCK STEERING TO SHIP:SRFPROGRADE.
-      RETURN FALSE.   // we're not done until we're in space!
-    }
-    ELSE
-    {
-      // out of atmosphere and altitude reached, we're done.
-      UNLOCK STEERING.
-      RETURN TRUE.    // we're done, send true.
-    }
-  }
-  
   // calculate some stuff for AoA limiting
   LOCK AoA TO VANG(SHIP:SRFPROGRADE:VECTOR, SHIP:FACING:VECTOR).
   LOCAL atmPressure IS SHP_pressure().
@@ -34,41 +18,62 @@ FUNCTION BDY_ascendGuidance {
         // 1 at sea level
         ELSE MIN(AoALimit / atmPressure, 180).
   
-  PRINT "Pressure: " + ROUND(atmPressure, 2) + "    " AT (70,8).
-  PRINT "DynAoA limit: " + ROUND(AoADynamicLimit, 2) + "   " AT (70,9).
+  LOCK desiredPitch TO 90 - ((altRatio^0.3) * 90).
+  
+  // throttle related
+  LOCAL maxTWR IS SHP_getMaxTWR().
+  LOCK altRatio TO ALTITUDE/desiredAltitude.
+  
+  LOCAL telemetry IS LEXICON("done", false, "branch", "init", "AoA", AoA, "atmPressure", atmPressure, "AoADynamicLimit", AoADynamicLimit, "maxTWR", maxTWR, "altRatio", altRatio, "ecc", SHIP:ORBIT:ECCENTRICITY, "desiredPitch", desiredPitch, "throttle", 0).
+  
+  IF desiredAltitude < SHIP:ORBIT:APOAPSIS {
+    UNLOCK THROTTLE.
+    IF BODY:ATM:EXISTS AND ALTITUDE < BODY:ATM:HEIGHT
+    {
+      // coasting to end of atmoshpere with minimum drag
+      SET telemetry["branch"] TO "Coasting to end of atmosphere".
+      LOCK STEERING TO SHIP:SRFPROGRADE.
+      RETURN telemetry.   // we're not done until we're in space!
+    }
+    ELSE
+    {
+      // out of atmosphere and altitude reached, we're done.
+      UNLOCK STEERING.
+      SET telemetry["branch"] TO "Done".
+      SET telemetry["done"] TO TRUE.
+      RETURN telemetry.    // we're done, send true.
+    }
+  }
   
   // launch from ground
   IF ALT:RADAR < 500 {
+    SET telemetry["branch"] TO "Launch from surface".
     LOCK STEERING TO HEADING(HDG, 90). // straight up
+    SET telemetry["throttle"] TO 1.
     LOCK THROTTLE TO 1.
     RETURN FALSE.       // certainly not done here, send false.  
+  } ELSE {
+    SET telemetry["branch"] TO "Burning".
   }
   
   // maintain constant TWR burn.
-  LOCAL maxTWR IS SHP_getMaxTWR().
-  LOCK altRatio TO ALTITUDE/desiredAltitude.
   IF NOT (maxTWR < 0.001)
   {
     // throttle down as approaching desired altitude.
     LOCK THROTTLE TO MIN((desiredTwr / maxTWR), MAX(1 - altRatio, 0)).
+    SET telemetry["throttle"] TO THROTTLE.
   }
   ELSE
   {
     LOCK THROTTLE TO 0.
   }
   
-  // compute desired pitch angle via ratio altitude/desiredAltitude
-  PRINT "ECC: " + ROUND(SHIP:ORBIT:ECCENTRICITY,3) AT (70,10).
-  
-  
-  LOCK desiredPitch TO 90 - ((altRatio^0.3) * 90).
-  PRINT "Desired Pitch: " + ROUND(desiredPitch,2) AT (70,11).
   LOCK steeringVector TO HEADING(HDG, desiredPitch).
   LOCK STEERING TO CHOOSE steeringVector
                     IF AoA < AoADynamicLimit
                     // when AoA over limit then rotate srfprograde towards steering vector
                     ELSE MATH_vecRotToVec(steeringVector:VECTOR, SHIP:SRFPROGRADE:VECTOR, AoADynamicLimit).
-  RETURN FALSE.     // we're still doing stuff, send false.
+  RETURN telemetry. // we're still doing stuff, send false.
 }
 
 // get gravitational constant at specific altitude
