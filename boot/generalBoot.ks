@@ -77,17 +77,6 @@ GLOBAL mission IS LEXICON().
 FUNCTION mission_runner
 {
   // ========================================================
-  // events are checked every loop and can be added or removed by the mission stages itself.
-  // event functions take the mission
-  // event functions will be deleted after execution if they do not return true
-  
-  // events = {"name": function@, "name2": function2@, ...}
-  
-  // initialize events
-  LOCAL events IS LEXICON().
-  SET events["msnUpdate"] TO evt_checkMissionUpdate@.
-  
-  // ========================================================
   // initialize mission functions
   SET mission["nextStage"] TO nextStage@.		// sets next stage in list
   SET mission["setStage"] TO setStage@.			// sets stage indicated by name
@@ -97,8 +86,18 @@ FUNCTION mission_runner
   SET mission["terminate"] TO terminate@.		// end mission
   
   // initialize members
-  SET mission["events"] TO events.
   
+  // ========================================================
+  // events are checked every loop and can be added or removed by the mission stages itself.
+  // event functions take the mission
+  // event functions will be deleted after execution if they do not return true
+  
+  // events = {"name": function@, "name2": function2@, ...}
+  
+  SET mission["events"] TO LEXICON().
+  mission["addEvent"]("msnUpdate", evt_checkMissionUpdate@).
+  
+  // ========================================================
   
   // populate sequence
   
@@ -195,8 +194,6 @@ FUNCTION nextStage {
 FUNCTION setStage {
   PARAMETER stageName.
   
-  PRINT "Next stage set to " + stageName.
-  
   // delete old backup
   IF EXISTS(stageBackup)
   {
@@ -226,7 +223,6 @@ FUNCTION addEvent {
   PARAMETER eventName.
   PARAMETER eventFunc.
   
-  PRINT "Adding event " + eventName.
   SET mission["events"][eventName] TO eventFunc.
 }
 
@@ -240,7 +236,6 @@ FUNCTION removeEvent {
   {
     NOTIFY("Removing event '" + eventName + "' unable, not found.",2).
   }
-  PRINT "Removing event " + eventName.
 }
 
 FUNCTION terminate {
@@ -275,11 +270,11 @@ FUNCTION evt_checkMissionUpdate {
   // check if connected
   IF CHECK_CONNECTION() {
     LOCAL archivePath IS "0:/" + SHIP:NAME + "/" + missionScript.
-    LOCAL localPath IS "/" + missionScript + "m".
-    LOCAL executedDir IS "0:/" + SHIP:NAME + "/executed".
-    LOCAL cnt IS getMissionCount().
-    // check if new mission exists
     IF EXISTS(archivePath) {
+      LOCAL localPath IS "/" + missionScript + "m".
+      LOCAL executedDir IS "0:/" + SHIP:NAME + "/executed".
+      LOCAL cnt IS getMissionCount().
+      // check if new mission exists
       DOWNLOAD(archivePath, NOT DEBUG, localPath).
       
       // move script on archive into executed directory
