@@ -103,7 +103,7 @@ FUNCTION printingTest {
   UNTIL RCS { WAIT 1. }
   RCS OFF.
   
-  TERM_print("A = 5", "Test 1", 5).
+  TERM_print("A = 5", "Test 2", 5).
   TERM_print("B = 6", "Test 2", 6).
   
   TERM_print("Test 2 lines 5 and 6 should contain A = 5 and B = 6 with no other characters. in those lines.").
@@ -125,12 +125,15 @@ FUNCTION printingTest {
   RCS OFF.
   
   TERM_clear().
+  TERM_print("This should appear in the first line.").
+  TERM_print("Will print a long text to line 10.").
+  TERM_print("Press RCS to continue.").
   
   UNTIL RCS { WAIT 1. }
   RCS OFF.
   TERM_print("This is a really long text that should"
   + " probably not fit into the terminal with 100 characters width"
-  + " and thus should be broken into multiple lines, starting from line 20.", "Default", 20).
+  + " and thus should be broken into multiple lines, starting from line 10.", "Default", 10).
   TERM_print("This line should appear after the long text.").
   TERM_print("").
   TERM_print("We're done.").
