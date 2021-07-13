@@ -1,17 +1,9 @@
 misc scripts:
 
-- hill climbing algorithm
-    pass fitness function, calculates fitness for given arguments
-    pass arguments as lists with step size list for step size of every argument
-    find neighbors
-    applies all +/- step sizes on all arguments and those are the neighbors
-    fitness function evaluates the neighbors, the best one is returned as the current object of interest unless the current one is the best already
-    
-    can chain those with decreasing step sizes:
-    optimize maneuver for transfer to body
-    optimize maneuver for dV (bad score for destroying transfer)
-    optimize maneuver for inclination (bad score for destroying transfer)
-    optimize maneuver for PA (bad score for destroying transfer or changing inclination much)
+- restore events after reboot
+    save events to file
+    restore file
+    have event names and function names in an lexicon.
 
 aircraft:
 - fly to waypoint
@@ -36,19 +28,14 @@ aircraft:
 maneuver scripts:
 orbital:
 - circularize, change AP/PA
-- inclination change
-    including burn to higher orbit for efficiency (hill climbing with 3 nodes (change AP at DN, change inclination at AN, circularize/burn back to original/ignore)?))
-	also including actual inclination change not to edit PA
+- efficient inclination change with circularization or returning to original orbit
 - orbital period change
 - do contract orbit (enter arguments from contracts)
+    use lambert solver -> intercept target?
 - calculate time for fixed dV maneuver with staging
 - go to child body, possibly with inclination and pereapsis height
 
-
 body:
-- ascend guidance w/ profile (target speeds, max AoA)
-   Have a 2 PID controllers. One of the controllers optimizes pitch for eccentricity over altitude. (1 at launch site or maybe at a given start time (10 seconds after launch))
-   The second controller optimizes the throttle for ETA to AP so that it's always 30 seconds on the future.
 - descend guidance
 - landing descend (PID controller controlling vertical speed (via TWR adjusted for ship tilt)), avoid slopes by follow slopes up or down by pointing towards the slope angle
 - surface descend steering: lock steering to lookdirup(up:vector * g + deltaVelocity) where deltaVelocity is locked to desiredVelocity - surfaceVelocity
@@ -62,10 +49,10 @@ target:
 - intercept target with hohman transfer at best time to meet with target at new AP/PE
 - kill relative velocity
 - docking: RCS controls, fore, star, top. Translate by vector until lined up. Get fore, star and top components with dot product of unit vector of fore, star and top. (EG fore component of V(5,3,8) is v DOT FORE), see scalar projection. perhaps avoid bounding box.
-- match inclination
 - match orbit
-- time to closest
 - Angle to target (orbital angle that the target is ahead of current vessel)
+- lambert solver -> rendesvous planner in system
+- lambert solver -> interplanetary planner
 
 
 notes:
