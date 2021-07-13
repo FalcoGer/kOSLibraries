@@ -24,27 +24,6 @@ function ORB_getTimeToTA {
   return dt.
 }
 
-// refNRM is the normal vector of the "equator" that we measure against
-function ORB_getTimeToAN {
-  parameter refNRM to V(0,1,0).
-  
-  local AN_NRM to ORB_getDir(refNRM).
-  local ANvec to AN_NRM:vector.
-  local taAN to ARCTAN2( VDOT(AN_NRM:upvector, VCRS(body:position, ANvec)), -VDOT(body:position, ANvec) ) + orbit:TRUEANOMALY.
-  return ORB_getTimeToTA(taAN).
-}
-
-// refNRM is the normal vector of the "equator" that we measure against
-function ORB_getTimeToDN {
-  parameter refNRM to V(0,1,0).
-  
-  local DN_NRM to ORB_getDir(refNRM).
-  local DNvec to -DN_NRM:vector.
-  local taDN to ARCTAN2( VDOT(DN_NRM:upvector, VCRS(body:position, DNvec)), -VDOT(body:position, DNvec) ) + orbit:TRUEANOMALY.
-  return ORB_getTimeToTA(taDN).
-}
-
-
 FUNCTION ORB_hohmann {
   PARAMETER desiredAltitude.
   
@@ -168,17 +147,17 @@ FUNCTION ORB_cirularize {
   
   LOCAL dV IS LIST(mnvTime,0,0,0).
   LOCAL numSteps IS 10.
-  // calculate to 0.25m/s precision, starting with 256m/s step sizes
+  // calculate to 0.125m/s precision, starting with 128m/s step sizes
   // don't alter time value (step size 0)
   // don't alter normal value. this will not be required (incl change) and will fuck up maneuvers.
-  LOCAL dVStep IS LIST(0, 2^(numSteps-2), 0, 2^(numSteps-2)).
+  LOCAL dVStep IS LIST(0, 2^(numSteps-3), 0, 2^(numSteps-3)).
 
   SET dV TO MATH_hillClimb(dV, dVStep, ORB_fitnessBestEcc@, numSteps).
   LOCAL n IS NODE(dV[0], dV[1], dV[2], dV[3]).
   ADD n.
 }
 
-FUNCTION ORB_fitnessBestEcc {
+LOCAL FUNCTION ORB_fitnessBestEcc {
   PARAMETER nodeValue.
   // generate node from data.
   LOCAL n IS NODE(nodeValue[0], nodeValue[1], nodeValue[2], nodeValue[3]).
