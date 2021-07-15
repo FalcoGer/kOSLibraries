@@ -4,14 +4,6 @@ GLOBAL DEBUG IS FALSE.
 SWITCH TO CORE:VOLUME.
 SET SHIP:CONTROL:PILOTMAINTHROTTLE TO 0.
 
-SET TERMINAL:WIDTH TO 100.
-SET TERMINAL:HEIGHT TO 60.
-
-WAIT 0.1.
-
-CORE:PART:GETMODULE("kOSProcessor"):DOEVENT("Open Terminal").
-WAIT 0.7.
-
 CLEARSCREEN.
 
 PRINT "Boot Stage 1".
@@ -22,10 +14,7 @@ IF DEBUG = TRUE {
 } ELSE IF NOT CORE:VOLUME:EXISTS("generalBoot.ksm") OR HOMECONNECTION:ISCONNECTED() {
   PRINT "2nd Stage compile.".
   WAIT UNTIL HOMECONNECTION:ISCONNECTED().
-  SWITCH TO ARCHIVE.
-  COMPILE "boot/generalBoot.ks".
-  SWITCH TO CORE:VOLUME.
-  MOVEPATH("0:/boot/generalBoot.ksm", "boot/generalBoot.ksm").
+  COMPILE "0:/boot/generalBoot.ks" TO "1:/boot/generalBoot.ksm".
 }
 
 PRINT "Stage 1 done.".
