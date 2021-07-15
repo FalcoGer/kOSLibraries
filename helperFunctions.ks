@@ -4,24 +4,28 @@ GLOBAL lineDelim IS "==================================================".
 FUNCTION NOTIFY {
   PARAMETER message.
   PARAMETER priority IS 1.
+  PARAMETER terminalPrint IS FALSE.
   
   LOCAL colour IS
     CHOOSE BLUE           IF priority <= 0.5 ELSE
-	CHOOSE GREEN          IF priority <= 1.5 ELSE
-	CHOOSE YELLOW         IF priority <= 2.5 ELSE
-	CHOOSE RGB(255,128,0) IF priority <= 3.5 ELSE
-	       RED.
+    CHOOSE GREEN          IF priority <= 1.5 ELSE
+    CHOOSE YELLOW         IF priority <= 2.5 ELSE
+    CHOOSE RGB(255,128,0) IF priority <= 3.5 ELSE
+           RED.
   
   LOCAL priorityStr IS
     CHOOSE "DEBUG: " IF priority <= 0.5 ELSE
-	CHOOSE "INFO:  " IF priority <= 1.5 ELSE
-	CHOOSE "WARN:  " IF priority <= 2.5 ELSE
-	CHOOSE "ERR:   " IF priority <= 3.5 ELSE
-	       "CRIT:  ".
+    CHOOSE "INFO:  " IF priority <= 1.5 ELSE
+    CHOOSE "WARN:  " IF priority <= 2.5 ELSE
+    CHOOSE "ERR:   " IF priority <= 3.5 ELSE
+           "CRIT:  ".
   
   // https://ksp-kos.github.io/KOS/commands/terminalgui.html
   HUDTEXT("kOS: " + message, 5, 2, 50, colour, false).
-  PRINT priorityStr + message.
+  IF terminalPrint
+  {
+    PRINT priorityStr + message.
+  }
 }
 
 FUNCTION CHECK_CONNECTION {
@@ -40,17 +44,14 @@ FUNCTION DOWNLOAD {
   PARAMETER comp IS FALSE. // do you want to compile before downloading
   PARAMETER dest IS CHOOSE name + "m" IF comp ELSE name.
   
-  // truncate "0:" if exists.
-  IF name[0] = "0" AND name[1] = ":" {
-    SET name TO name:SUBSTRING(2, name:LENGTH() - 2).
+  // truncate "0:/" if exists.
+  IF name[0] = "0" AND name[1] = ":" AND name[2] = "/" {
+    SET name TO name:SUBSTRING(3, name:LENGTH() - 3).
   }
   
   IF ARCHIVE:EXISTS(name) {
     IF comp {
-	  SWITCH TO ARCHIVE.
-	  COMPILE name TO "tmp.ksm".
-	  SWITCH TO CORE:VOLUME.
-	  MOVEPATH("0:/tmp.ksm", dest).
+	  COMPILE "0:/" + name TO dest.
 	}
 	else
 	{
