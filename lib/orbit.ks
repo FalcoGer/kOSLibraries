@@ -171,20 +171,6 @@ LOCAL FUNCTION ORB_fitnessBestEcc {
   RETURN fitness.
 }
 
-FUNCTION ORB_changeAP {
-  PARAMETER newAPAlt.
-  PARAMETER mnvTime IS SHIP:ORBIT:ETA:PERIAPSIS.
-  
-  // TODO
-}
-
-FUNCTION ORB_changePA {
-  PARAMETER newPAAlt.
-  PARAMETER mnvTime IS SHIP:ORBIT:ETA:APOAPSIS.
-  
-  // TODO
-}
-
 // get a vector pointing up from the orbital plane of an orbitable (CCW = UP)
 FUNCTION ORB_getNormal {
   PARAMETER orbitable IS SHIP.

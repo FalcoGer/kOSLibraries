@@ -3,6 +3,25 @@
 
 LOCAL regions IS LEXICON().
 
+FUNCTION TERM_setup
+{
+  PARAMETER w
+  PARAMETER h
+  
+  SET TERMINAL:WIDTH TO w.
+  SET TERMINAL:HEIGHT TO h.
+}
+
+FUNCTION TERM_show
+{
+  CORE:PART:GETMODULE("kOSProcessor"):DOEVENT("Open Terminal").
+}
+
+FUNCTION TERM_hide
+{
+  CORE:PART:GETMODULE("kOSProcessor"):DOEVENT("Close Terminal").
+}
+
 FUNCTION TERM_print
 {
   PARAMETER msg.
