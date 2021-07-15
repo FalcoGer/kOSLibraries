@@ -151,7 +151,7 @@ FUNCTION BDY_getSurfaceSlopeDirectionVector {
 // get a normalized vector pointing directly up from the surface
 FUNCTION BDY_getRadialOutVector {
   PARAMETER geo.
-  RETURN (geo:ALTITUDEPOSITION(0) - geo:ALTITUDEPOSITION(100_000)):NORMALIZED.
+  RETURN (geo:ALTITUDEPOSITION(100_000) - geo:ALTITUDEPOSITION(0)):NORMALIZED.
 }
 
 FUNCTION BDY_getTimeToImpact {
