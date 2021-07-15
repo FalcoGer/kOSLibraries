@@ -2,10 +2,6 @@
 // secondary boot script, will be compiled and uploaded to craft by primary boot script
 // using runlevels and mission sequencing to structure missions.
 
-WAIT 1.
-
-CLEARSCREEN.
-
 // script holds mission file
 // when a new mission for the craft is found on the ARCHIVE then
 // it will be downloaded and the mission will be reset.
@@ -13,11 +9,11 @@ CLEARSCREEN.
 // mission script must define function getSequence that will return the sequence list
 // mission script must define any functions that appear in the sequence list
 // sequence list must have a init stage, which may set up any events and then switch stage to whatever it might be.
-SET missionScript TO "mission.ks".
+LOCAL missionScript IS "mission.ks".
 
 // file will hold name of current mission stage to reload after reboot, loss of power or
 // vessel switching
-SET stageBackup TO "currentStage.txt".
+LOCAL stageBackup IS "currentStage.txt".
 
 // init archive for this vessel
 IF HOMECONNECTION:ISCONNECTED() AND NOT ARCHIVE:EXISTS(SHIP:NAME) {
@@ -36,7 +32,7 @@ CD ("/boot").
 LIST FILES.
 CD("/").
 
-FROM {LOCAL i IS CHOOSE 30 IF DEBUG ELSE 2.} UNTIL (i = 0) STEP { SET i TO i-1. } DO {
+FROM {LOCAL i IS CHOOSE 30 IF DEBUG ELSE 0.} UNTIL (i <= 0) STEP { SET i TO i-1. } DO {
   PRINT "Booting stage 2 in " + i + "s. " AT (0, 0).
   WAIT 1.
 }
@@ -51,19 +47,13 @@ IF NOT DEBUG {
 ELSE {
   IF NOT EXISTS("helperFunctions.ksm") {
     PRINT "Fetching Helper Functions...".
-    SWITCH TO 0.
-    COMPILE "helperFunctions.ks" TO "helperFunctions.ksm".
-    SWITCH TO CORE:VOLUME.
-    MOVEPATH("0:/helperFunctions.ksm", "helperFunctions.ksm").
+    COMPILE "0:/helperFunctions.ks" TO "1:/helperFunctions.ksm".
   }
 }
 
 RUNONCEPATH("helperFunctions").
 
 print "Helper Functions loaded.".
-
-PRINT "".
-PRINT lineDelim.
 
 FUNCTION main
 {
@@ -140,8 +130,6 @@ FUNCTION mission_runner
   }
   
   // ========================================================
-  
-  CLEARSCREEN.
   
   // main loop
   UNTIL FALSE // run forever
@@ -256,8 +244,7 @@ FUNCTION terminate {
     DELETEPATH(stageBackup).
   }
   
-  NOTIFY("Mission Completed. Reboot in 10.", 1).
-  WAIT 10.
+  NOTIFY("Mission Completed. Reboot.", 1).
   
   // reboot, will await new instructions (as missions) via event handler.
   REBOOT.
@@ -294,9 +281,7 @@ FUNCTION evt_checkMissionUpdate {
         DELETEPATH(stageBackup).
       }
       
-      NOTIFY ("Found new mission, reboot in 5.", 1).
-      PRINT lineDelim.
-      WAIT 5.
+      NOTIFY ("Found new mission, reboot.", 1).
       REBOOT.
     }
   }
