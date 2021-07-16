@@ -18,7 +18,7 @@ FUNCTION BDY_ascendGuidance {
         // 1 at sea level
         ELSE MIN(AoALimit / atmPressure, 180).
   
-  LOCK desiredPitch TO 90 - ((altRatio^0.3) * 90).
+  LOCK desiredPitch TO 90 - ((altRatio^0.33) * 90).
   
   // throttle related
   LOCAL maxTWR IS SHP_getMaxTWR().
@@ -51,7 +51,7 @@ FUNCTION BDY_ascendGuidance {
     LOCK STEERING TO HEADING(HDG, 90). // straight up
     SET telemetry["throttle"] TO 1.
     LOCK THROTTLE TO 1.
-    RETURN FALSE.       // certainly not done here, send false.  
+    RETURN telemetry.       // certainly not done here, send false.  
   } ELSE {
     SET telemetry["branch"] TO "Burning".
   }
