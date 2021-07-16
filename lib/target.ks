@@ -11,10 +11,10 @@ FUNCTION TGT_transfer
 {
   PARAMETER bothNodes IS TRUE.                // if false, will only plot starting node
   PARAMETER final_orbit_periapsis IS 100_000.
-  PARAMETER earliest_departure IS TIME:SECONDS + 120.
-  PARAMETER search_duration IS -1.            // how long into the future will we search
   PARAMETER final_orbit_type IS "circular".   //  "none", "circular" or "elliptical"
   PARAMETER final_orbit_orientation IS "prograde". // "prograde", "polar", "retrograde"
+  PARAMETER earliest_departure IS -1.
+  PARAMETER search_duration IS -1.            // how long into the future will we search
   PARAMETER search_interval IS -1.
   PARAMETER max_time_of_flight IS -1.
   PARAMETER VERB IS FALSE.
@@ -24,11 +24,14 @@ FUNCTION TGT_transfer
   LOCAL options IS LEXICON(
     "verbose", VERB
     , "create_maneuver_nodes", CHOOSE "both" IF bothNodes ELSE "first"
-    , "earliest_departure", earliest_departure
     , "final_orbit_periapsis", final_orbit_periapsis
     , "final_orbit_type", final_orbit_type
     , "final_orbit_orientation", final_orbit_orientation
   ).
+  
+  IF earliest_departure >= 0 {
+    SET options["earliest_departure"] TO earliest_departure.
+  }
   
   IF search_duration >= 0 {
     SET options["search_duration"] TO search_duration.
