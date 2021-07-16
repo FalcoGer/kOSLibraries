@@ -68,7 +68,7 @@ FUNCTION SHP_burnedOutEngines {
 // then they will not count as flamed out.
 // may also be a problem with multi mode engines
 FUNCTION SHP_burnout {
-  RETURN SHP_burnedOutEngines():LENGTH() > 0.
+  RETURN SHP_burnedOutEngines():LENGTH() > 0 OR SHP_activeEngines():LENGTH = 0.
 }
 
 FUNCTION SHP_throttleStepping {
