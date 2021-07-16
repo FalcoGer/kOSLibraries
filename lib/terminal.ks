@@ -5,8 +5,8 @@ LOCAL regions IS LEXICON().
 
 FUNCTION TERM_setup
 {
-  PARAMETER w
-  PARAMETER h
+  PARAMETER w.
+  PARAMETER h.
   
   SET TERMINAL:WIDTH TO w.
   SET TERMINAL:HEIGHT TO h.
@@ -14,12 +14,12 @@ FUNCTION TERM_setup
 
 FUNCTION TERM_show
 {
-  CORE:PART:GETMODULE("kOSProcessor"):DOEVENT("Open Terminal").
+  CORE:DOEVENT("Open Terminal").
 }
 
 FUNCTION TERM_hide
 {
-  CORE:PART:GETMODULE("kOSProcessor"):DOEVENT("Close Terminal").
+  CORE:DOEVENT("Close Terminal").
 }
 
 FUNCTION TERM_print
@@ -27,9 +27,11 @@ FUNCTION TERM_print
   PARAMETER msg.
   PARAMETER regionName IS "default".
   PARAMETER lineNo IS -1.
+  PARAMETER updateRegion IS TRUE.
   // implement column?
   
   LOCAL region IS regions[regionName].
+  LOCAL maxWidth IS region["w"] - 2.
   
   IF lineNo < 0 {
     SET lineNo TO region["lines"]:LENGTH.
@@ -37,21 +39,23 @@ FUNCTION TERM_print
   
   // add lines to have the index available.
   UNTIL region["lines"]:LENGTH > (lineNo - 1) {
-    region["lines"]:ADD("").
+    region["lines"]:ADD("":PADRIGHT(maxWidth)).
   }
   
   // fit message into lines until message digested completely
   UNTIL msg:LENGTH = 0 {
-    LOCAL partMsg IS msg:SUBSTRING(0, MIN(msg:LENGTH, region["w"] - 2)).
+    LOCAL partMsg IS msg:SUBSTRING(0, MIN(msg:LENGTH, maxWidth)).
     SET msg TO msg:SUBSTRING(partMsg:LENGTH, msg:LENGTH - partMsg:LENGTH).
-    
+    SET partMsg TO partMsg:PADRIGHT(maxWidth).
     IF lineNo >= region["lines"]:LENGTH { region["lines"]:ADD(partMsg). }
     ELSE { SET region["lines"][lineNo] TO partMsg. }
     
     SET lineNo TO lineNo + 1.
   }
   
-  TERM_update(region).
+  IF updateRegion {
+    TERM_update(region).
+  }
 }
 
 FUNCTION TERM_clear
@@ -110,14 +114,18 @@ LOCAL FUNCTION TERM_update
   
   LOCAL lineCount IS region["lines"]:LENGTH.
   
+  LOCAL termX IS region["x"] + 2.     // leave a space on the left (border + 1 space)
+  LOCAL maxWidth IS region["w"] - 2.
+  LOCAL emptyLine IS "":PADRIGHT(maxWidth).
+  
   FOR termY IN RANGE(region["y"] + 1, region["y"] + region["h"] + 1, 1) {
     LOCAL lineNo IS termY - region["y"] - 1.
-    LOCAL lineText IS "".
+    LOCAL lineText IS emptyLine.
     IF lineNo < lineCount
     {
       SET lineText TO region["lines"][lineNo].
     }
-    PRINT " " + lineText:PADRIGHT(region["w"] - 2) AT (region["x"] + 1, termY).
+    PRINT lineText AT (termX, termY).
   }
 }
 
@@ -125,26 +133,16 @@ LOCAL FUNCTION TERM_addBorder
 {
   PARAMETER region.
   
-  LOCAL left IS region["x"].
-  LOCAL top IS region["y"].
-  LOCAL right IS region["x"] + region["w"] + 1.
   LOCAL bottom IS region["y"] + region["h"] + 1.
   
-  PRINT "+" AT (left, top).
-  PRINT "+" AT (left, bottom).
-  PRINT "+" AT (right, top).
-  PRINT "+" AT (right, bottom).
-  FOR x IN RANGE(left + 1, right, 1)
-  {
-    PRINT "-" AT (x, top).
-    PRINT "-" AT (x, bottom).
-  }
+  LOCAL topBottomBorder IS "+" + "":PADRIGHT(region["w"]):REPLACE(" ", "-") + "+".
+  LOCAL leftRightBorder IS "|" + "":PADRIGHT(region["w"]) + "|".
   
-  FOR y IN RANGE (top + 1, bottom, 1)
-  {
-    PRINT "|" AT (left, y).
-    PRINT "|" AT (right, y).
+  PRINT topBottomBorder AT (region["x"], region["y"]).
+  FOR y IN RANGE (region["y"] + 1, bottom, 1) {
+    PRINT leftRightBorder AT (region["x"], y).
   }
+  PRINT topBottomBorder AT (region["x"], bottom).
   
   TERM_addTitle(region).
 }
@@ -152,5 +150,5 @@ LOCAL FUNCTION TERM_addBorder
 LOCAL FUNCTION TERM_addTitle
 {
   PARAMETER region.
-  PRINT region["title"] AT (ROUND(region["w"] / 2, 0) - ROUND(region["title"]:LENGTH / 2, 0) + region["x"], region["y"]).
+  PRINT region["title"] AT (region["x"] + ROUND(region["w"] / 2, 0) - ROUND(region["title"]:LENGTH / 2, 0), region["y"]).
 }

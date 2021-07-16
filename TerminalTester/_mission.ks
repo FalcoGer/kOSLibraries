@@ -14,11 +14,16 @@ FUNCTION getSequence {
 FUNCTION init {
   PARAMETER mission.
   
-  TERM_addRegion("Test 0", 0, 0, 98, 2).
-  TERM_addRegion("Test 1", 0, 3, 48, 27).
-  TERM_addRegion("Test 2", 49, 3, 49, 13).
-  TERM_addRegion("Test 3", 49, 17, 49, 13).
-  TERM_addRegion("Default", 0, 31, 98, 26).
+  TERM_setup(80, 50).
+  TERM_show().
+  
+  CLEARSCREEN.
+  
+  TERM_addRegion("Test 0", 0, 0, 78, 2).
+  TERM_addRegion("Test 1", 0, 3, 38, 21).
+  TERM_addRegion("Test 2", 39, 3, 39, 10).
+  TERM_addRegion("Test 3", 39, 14, 39, 10).
+  TERM_addRegion("Default", 0, 25, 78, 20).
   
   TERM_print("Setup Test Complete").
   
