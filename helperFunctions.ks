@@ -35,7 +35,8 @@ FUNCTION CHECK_CONNECTION {
   IF tgt {
     SET conn TO tgt:CONNECTION.
   }
-  RETURN conn:ISCONNECTED().
+  // high timewarp fucks with things.
+  RETURN KUNIVERSE:TIMEWARP:RATE = 1 AND conn:ISCONNECTED().
 }
 
 // Get a file from KSC
