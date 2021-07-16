@@ -85,31 +85,29 @@ FUNCTION MNV_nodeExec {
       }
     }
     ELSE {  // start time not yet reached.
-      // check if autowarp is enabled
-      IF autowarp {
-        IF
-          // check if we are far enough away from start
+      LOCAL warpCondition IS // check if we are far enough away from start
           TIME:SECONDS < (startTime - safetyMarginToStart)
           // check if we are pointing in the right direction
-          AND deltaAngle < minAngleEngine
-          AND NOT MNV_WARP_IS_SET
+          AND deltaAngle < minAngleEngine.
+          
+      // check if autowarp is enabled
+      
+      IF warpCondition {
+        IF autowarp AND NOT MNV_WARP_IS_SET
         {
           KUNIVERSE:TimeWarp:WARPTO(startTime - safetyMarginToStart).
           SET MNV_WARP_IS_SET TO TRUE.
         }
-        ELSE IF MNV_WARP_IS_SET {
-          // condition is no longer true, stop warp
-          KUNIVERSE:TimeWarp:CANCELWARP().
-          // wait for condition to fix itself so not to constantly
-          // start and stop warping.
-          SET MNV_WARP_IS_SET TO FALSE.
-          WAIT 1.
-        }
       }
-      ELSE IF TIME:SECONDS >= (startTime - safetyMarginToStart)
+      ELSE
       {
-        // cancel warp in any case if maneuver time has come
+        // condition is no longer true, stop warp
         KUNIVERSE:TimeWarp:CANCELWARP().
+        SET MNV_WARP_IS_SET TO FALSE.
+        
+        // wait for condition to fix itself so not to constantly
+        // start and stop warping.
+        WAIT 1.
       }
     }
   }
