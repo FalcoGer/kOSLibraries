@@ -18,11 +18,12 @@ FUNCTION BDY_ascendGuidance {
         // 1 at sea level
         ELSE MIN(AoALimit / atmPressure, 180).
   
-  LOCK desiredPitch TO 90 - ((altRatio^0.33) * 90).
+  LOCK altRatio TO ALTITUDE/desiredAltitude.
+  LOCK desiredPitch TO 90 - ((MIN(altRatio, 1)^0.33) * 90).
   
   // throttle related
   LOCAL maxTWR IS SHP_getMaxTWR().
-  LOCK altRatio TO ALTITUDE/desiredAltitude.
+  
   
   LOCAL telemetry IS LEXICON("done", false, "branch", "init", "AoA", AoA, "atmPressure", atmPressure, "AoADynamicLimit", AoADynamicLimit, "maxTWR", maxTWR, "altRatio", altRatio, "ecc", SHIP:ORBIT:ECCENTRICITY, "desiredPitch", desiredPitch, "throttle", 0).
   
