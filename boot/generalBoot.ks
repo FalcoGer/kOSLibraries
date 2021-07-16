@@ -254,36 +254,34 @@ FUNCTION terminate {
 FUNCTION evt_checkMissionUpdate {
   PARAMETER mission.
   
+  LOCAL archivePath IS "0:/" + SHIP:NAME + "/" + missionScript.
   // check if connected
-  IF CHECK_CONNECTION() {
-    LOCAL archivePath IS "0:/" + SHIP:NAME + "/" + missionScript.
-    IF EXISTS(archivePath) {
-      LOCAL localPath IS "/" + missionScript + "m".
-      LOCAL executedDir IS "0:/" + SHIP:NAME + "/executed".
-      LOCAL cnt IS getMissionCount().
-      // check if new mission exists
-      DOWNLOAD(archivePath, NOT DEBUG, localPath).
-      
-      // move script on archive into executed directory
-      // this prevents missions from executing multiple time.
-      // create directory if not exists
-      IF NOT EXISTS(executedDir)
-      {
-        CREATEDIR(executedDir).
-      }
-      
-      // move mission file on archive to new location
-      MOVEPATH(archivePath, executedDir + "/mission." + cnt + ".ks").
-      addMissionCounter().
-      
-      IF EXISTS(stageBackup)
-      {
-        DELETEPATH(stageBackup).
-      }
-      
-      NOTIFY ("Found new mission, reboot.", 1).
-      REBOOT.
+  IF CHECK_CONNECTION() AND EXISTS(archivePath) {
+    LOCAL localPath IS "/" + missionScript + "m".
+    LOCAL executedDir IS "0:/" + SHIP:NAME + "/executed".
+    LOCAL cnt IS getMissionCount().
+    // check if new mission exists
+    DOWNLOAD(archivePath, NOT DEBUG, localPath).
+    
+    // move script on archive into executed directory
+    // this prevents missions from executing multiple time.
+    // create directory if not exists
+    IF NOT EXISTS(executedDir)
+    {
+      CREATEDIR(executedDir).
     }
+    
+    // move mission file on archive to new location
+    MOVEPATH(archivePath, executedDir + "/mission." + cnt + ".ks").
+    addMissionCounter().
+    
+    IF EXISTS(stageBackup)
+    {
+      DELETEPATH(stageBackup).
+    }
+    
+    NOTIFY ("Found new mission, reboot.", 1).
+    REBOOT.
   }
   
   RETURN TRUE.
