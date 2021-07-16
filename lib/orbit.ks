@@ -145,37 +145,37 @@ FUNCTION ORB_transferOrbit {
 FUNCTION ORB_cirularize {
   PARAMETER mnvTime.
   
-  LOCAL dV IS LIST(mnvTime,0,0,0).
-  LOCAL numSteps IS 10.
-  // calculate to 0.125m/s precision, starting with 128m/s step sizes
-  // don't alter time value (step size 0)
-  // don't alter normal value. this will not be required (incl change) and will fuck up maneuvers.
-  LOCAL dVStep IS LIST(0, 2^(numSteps-3), 0, 2^(numSteps-3)).
-
-  SET dV TO MATH_hillClimb(dV, dVStep, ORB_fitnessBestEcc@, numSteps).
-  LOCAL n IS NODE(dV[0], dV[1], dV[2], dV[3]).
+  // orbital period:  t = 2*PI*SQRT(a^3 / MU)
+  // orbit length:    s = 2*PI*r
+  // velocity:        v = s/t = r / SQRT(r^3 / MU)
+  
+  LOCAL bdy IS ORBITAT(SHIP, mnvTime):BODY.
+  LOCAL radiusAtMnv IS (POSITIONAT(SHIP, mnvTime) - bdy:POSITION):MAG.
+  
+  LOCAL requiredSpeed IS radiusAtMnv / SQRT(radiusAtMnv^3 / bdy:MU).
+  
+  // velocity needs to be parallel to the ground.
+  // ship position to body vector X orbit normal will give a vector parallel to the body surface, which is the target direction.
+  
+  // OUT X NORM = PARALLEL to ground (left handed system)
+  LOCAL desiredVelocityVector IS VCRS(POSITIONAT(SHIP, mnvTime) - bdy:POSITION, ORB_getNormal(SHIP)):NORMALIZED * requiredSpeed.
+  
+  LOCAL actualVelocityVector IS VELOCITYAT(SHIP, mnvTime):ORBIT.
+  
+  LOCAL dV IS desiredVelocityVector - actualVelocityVector.
+  
+  LOCAL n IS MATH_nodeFromVector(mnvTime, dV).
   ADD n.
-}
-
-LOCAL FUNCTION ORB_fitnessBestEcc {
-  PARAMETER nodeValue.
-  // generate node from data.
-  LOCAL n IS NODE(nodeValue[0], nodeValue[1], nodeValue[2], nodeValue[3]).
-  ADD n.        // need to add node to flight plan in order to check out how good it is.
-  WAIT 0.03.    // maybe wait for ksp to figure shit out with this node?
-  // best orbit is 0 eccentricity.
-  // need to round because eccentricity calculation isn't exact
-  // if left as is, hill climbing will forever loop because it finds the same maneuver plan is giving ever so slightly different (aka better) value.
-  LOCAL fitness IS -1 * ROUND(n:ORBIT:ECCENTRICITY, 6).
-  REMOVE n.
-  RETURN fitness.
 }
 
 // get a vector pointing up from the orbital plane of an orbitable (CCW = UP)
 FUNCTION ORB_getNormal {
   PARAMETER orbitable IS SHIP.
   
-  RETURN VCRS(VELOCITYAT(orbitable, TIME:SECONDS + orbitable:ORBIT:PERIOD / 4):ORBIT, VELOCITYAT(orbitable, TIME:SECONDS):ORBIT):NORMALIZED.
+  // RETURN VCRS(VELOCITYAT(orbitable, TIME:SECONDS + orbitable:ORBIT:PERIOD / 4):ORBIT, VELOCITYAT(orbitable, TIME:SECONDS):ORBIT):NORMALIZED.
+  LOCAL now IS TIME:SECONDS.
+  LOCAL progradeVector IS VELOCITYAT(orbitable,now):ORBIT:NORMALIZED.
+  RETURN VCRS(progradeVector,(POSITIONAT(orbitable,now) - orbitable:BODY:POSITION):NORMALIZED):NORMALIZED.
 }
 
 // creates a maneuver at the specified time to change the inclination
@@ -200,7 +200,8 @@ FUNCTION ORB_changeIncl {
   LOCAL desiredManeuver IS desiredOrbitalSpeed - orbSpeed.
   
   // radial, normal, prograde
-  RETURN LIST(desiredManeuver:x, desiredManeuver:y, desiredManeuver:z).
+  LOCAL n IS NODE(t, desiredManeuver:x, desiredManeuver:y, desiredManeuver:z).
+  ADD n.
 }
 
 FUNCTION ORB_changeInclEfficient {

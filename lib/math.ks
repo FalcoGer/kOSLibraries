@@ -151,3 +151,17 @@ FUNCTION MATH_distancePointToPlane {
   
   RETURN d.
 }
+
+FUNCTION MATH_nodeFromVector {
+    PARAMETER nodeTime.
+    PARAMETER vecTarget.
+    LOCAL localBody IS ORBITAT(SHIP,nodeTime):BODY.
+    LOCAL vecNodePrograde IS VELOCITYAT(SHIP,nodeTime):ORBIT:NORMALIZED.
+    LOCAL vecNodeNormal IS VCRS(vecNodePrograde,(POSITIONAT(SHIP,nodeTime) - localBody:POSITION):NORMALIZED):NORMALIZED.
+    LOCAL vecNodeRadial IS VCRS(vecNodeNormal,vecNodePrograde).
+
+    LOCAL nodePrograde IS VDOT(vecTarget,vecNodePrograde).
+    LOCAL nodeNormal IS VDOT(vecTarget,vecNodeNormal).
+    LOCAL nodeRadial IS VDOT(vecTarget,vecNodeRadial).
+    RETURN NODE(nodeTime,nodeRadial,nodeNormal,nodePrograde).
+}
