@@ -4,6 +4,7 @@ REQUIRE("lib/maneuver.ks").
 REQUIRE("lib/orbit.ks").
 REQUIRE("lib/body.ks").
 REQUIRE("lib/terminal.ks").
+REQUIRE("lib/target.ks").
 
 LOCAL telemetryName IS "general".
 LOCAL telemetryDir IS "0:/" + SHIP:NAME + "/telem" + "." + getMissionCount().
@@ -13,7 +14,9 @@ FUNCTION getSequence {
   RETURN LIST(
     "init", init@,
     "ascendFromKerbin", ascendFromKerbin@,
-    "circularizeKerbin", circularizeKerbin@
+    "circularizeKerbin", circularizeKerbin@,
+    "inclinationChangeTest", inclinationChangeTest@,
+    "deorbit", deorbit@
   ).
 }
 
@@ -72,6 +75,46 @@ FUNCTION circularizeKerbin {
   
   IF MNV_nodeExec(TRUE)
   {
+    mission["nextStage"]().
+  }
+}
+
+FUNCTION inclinationChangeTest
+{
+  PARAMETER mission.
+  
+  IF NOT HASNODE {
+    LOCAL anTime IS TGT_findAN_DN_time()[0].
+    ORB_changeIncl(anTime, 25).
+  }
+  
+  IF SHP_burnout()
+  {
+    STAGE.
+  }
+  
+  IF MNV_nodeExec(TRUE)
+  {
+    TERM_print("Inclination change done.").
+    TERM_print("INC: " + SHIP:ORBIT:INCLINATION).
+    
+    WAIT 10.
+    mission["nextStage"]().
+  }
+}
+
+FUNCTION deorbit
+{
+  PARAMETER mission.
+  
+  LOCK STEERING TO RETROGRADE.
+  
+  LOCK THROTTLE TO 1.
+  
+  IF PERIAPSIS < 30_000
+  {
+    UNLOCK STEERING.
+    UNLOCK THROTTLE.
     mission["nextStage"]().
   }
 }
