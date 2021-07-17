@@ -52,7 +52,7 @@ FUNCTION MNV_nodeExec {
           ((deltaAngle < maxAngleEngine) AND (mnvDv <= maxDvDeviationEngine) AND NOT useRCS).
       
       LOCK THROTTLE TO CHOOSE
-        MIN(mnvTime / 0.1, 1)
+        MIN(mnvTime / 0.5, 1)
         IF engineBurnRequired 
         ELSE 0.
       
