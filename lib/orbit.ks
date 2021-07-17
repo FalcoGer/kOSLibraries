@@ -218,3 +218,13 @@ FUNCTION ORB_changeInclEfficient {
   
   // TODO
 }
+
+// how many degrees the orbit advances per seconds
+// only for circular orbits
+FUNCTION ORB_angularVelocityCircular
+{
+  PARAMETER orbitable.
+  LOCAL bdy IS orbitable:BODY.
+  
+  RETURN SQRT(bdy:MU / orbitable:ORBIT:SEMIMAJORAXIS^3) * CONSTANT:RadToDeg.
+}

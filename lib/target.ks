@@ -51,6 +51,35 @@ FUNCTION TGT_transfer
   RETURN ret.
 }
 
+// only works for coplanar, circular orbits
+FUNCTION TGT_hohmannTransfer {
+  // https://www.faa.gov/about/office_org/headquarters_offices/avs/offices/aam/cami/library/online_libraries/aerospace_medicine/tutorial/media/III.4.1.5_Maneuvering_in_Space.pdf
+    
+  LOCAL r1 IS SHIP:ORBIT:SEMIMAJORAXIS.
+  LOCAL r2 IS TARGET:ORBIT:SEMIMAJORAXIS.
+  LOCAL dV IS ORB_hohmannDv(r2 - BODY:RADIUS)[0].
+  
+  // angular velocity
+  LOCAL w1 IS ORB_angularVelocityCircular(SHIP).
+  LOCAL w2 IS ORB_angularVelocityCircular(TARGET).
+  
+  LOCAL transferTime IS CONSTANT:PI * SQRT( ((r1+r2)/2)^3 / BODY:MU ).
+  // how much the target moves during the maneuver
+  LOCAL leadAngle IS transferTime * w2.
+  // we move 180°, so that's compensated for in the phase angle
+  LOCAL phaseAngle IS 180 - leadAngle.
+  SET phaseAngle TO MOD(phaseAngle + 360, 360).
+  
+  // calculate the wait time for the phase angle to be perfect
+  LOCAL currentPhaseAngle IS TGT_phaseAngle().
+  
+  // current difference to perfect angle / phase angle change rate
+  LOCAL etaMnv IS (phaseAngle - currentPhaseAngle) / (w2 - w1).
+  
+  LOCAL n IS NODE(TIME:SECONDS + etaMnv, 0, 0, dV).
+  ADD n.
+}
+
 // return the seperation at a specified time
 // considering all maneuver nodes are executed as planned. (POSITIONAT does that)
 FUNCTION TGT_seperationAt {
@@ -197,11 +226,29 @@ FUNCTION TGT_matchInclination {
   
   IF (vAN < vDN) {
     // do inclination change at AN
-    LOCAL dV IS ORB_changeIncl(anDn[0], -1 * deltaInc).
-    ADD NODE(anDn[0], dV[0], dV[1], dV[2]).
+    ORB_changeIncl(anDn[0], -1 * deltaInc).
   } ELSE {
     // do inclination change at DN
-    LOCAL dV IS ORB_changeIncl(anDn[1], deltaInc).
-    ADD NODE(anDn[0], dV[0], dV[1], dV[2]).
+    ORB_changeIncl(anDn[1], deltaInc).
+  }
+}
+
+FUNCTION TGT_phaseAngle {
+  IF NOT HASTARGET { RETURN 0. }
+  
+  LOCAL bdyPos IS SHIP:BODY:POSITION.
+  LOCAL bdyToShip IS bdyPos * -1.
+  LOCAL bdyToTgt IS TARGET:POSITION - bdyPos.
+  
+  LOCAL angle IS VANG(bdyToShip, bdyToTgt).
+  LOCAL crs IS VCRS(bdyToShip, bdyToTgt). // points down if ahead, up otherwise.
+  LOCAL nrm IS ORB_getNormal().
+  
+  IF VANG(nrm, crs) > 90 {
+    // target ahead
+    RETURN angle.
+  } ELSE {
+    // target behind
+    RETURN 360 - angle.
   }
 }
