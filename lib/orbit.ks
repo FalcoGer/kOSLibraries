@@ -35,10 +35,10 @@ FUNCTION ORB_hohmann {
     SET hohmann[1] TO -1 * hohmann[1].
   }
   
-  LOCAL n1 IS NODE(SHIP:ORBIT:ETA:PERIAPSIS, 0, 0, hohmann[0]).
+  LOCAL n1 IS NODE(SHIP:ORBIT:ETA:PERIAPSIS + TIME:SECONDS, 0, 0, hohmann[0]).
   ADD n1.
   WAIT 0.03. // wait for orbits to update
-  LOCAL n2 IS NODE(n1:ORBIT:ETA:APOAPSIS, 0, 0, hohmann[1]).
+  LOCAL n2 IS NODE(n1:ORBIT:ETA:APOAPSIS + TIME:SECONDS, 0, 0, hohmann[1]).
   ADD n2.
   WAIT 0.03.
 }
@@ -58,13 +58,13 @@ FUNCTION ORB_BiEliptical {
   IF r2 < r1 { SET v2 TO -1 * v2. }
   
   // create nodes and add them.
-  LOCAL n1 IS NODE(ETA:PERIAPSIS, 0, 0, biecliptic[0]).
+  LOCAL n1 IS NODE(ETA:PERIAPSIS + TIME:SECONDS, 0, 0, biecliptic[0]).
   ADD n1.
   WAIT 0.03.
-  LOCAL n2 IS NODE(n1:ORBIT:ETA:APOAPSIS, 0, 0, v2).
+  LOCAL n2 IS NODE(n1:ORBIT:ETA:APOAPSIS + TIME:SECONDS, 0, 0, v2).
   ADD n2.
   WAIT 0.03.
-  LOCAL n3 IS NODE(n2:ORBIT:ETA:PERIAPSIS, 0, 0, -1 * v3).
+  LOCAL n3 IS NODE(n2:ORBIT:ETA:PERIAPSIS + TIME:SECONDS, 0, 0, -1 * v3).
   ADD n3.
   WAIT 0.03.
 }
@@ -133,12 +133,12 @@ FUNCTION ORB_transferOrbit {
      OR ratio > 12 AND minimal > 815.81
   {
     // bi-eliptical is more efficient
-    RETURN ORB_BiEliptical(desiredAltitude, rbCap).
+    ORB_BiEliptical(desiredAltitude, rbCap).
   }
   ELSE
   {
     // hohmann is more efficient.
-    RETURN ORB_hohmann(desiredAltitude).
+    ORB_hohmann(desiredAltitude).
   }
 }
 
