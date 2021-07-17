@@ -19,7 +19,7 @@ FUNCTION BDY_ascendGuidance {
         ELSE MIN(AoALimit / atmPressure, 180).
   
   LOCK altRatio TO ALTITUDE/desiredAltitude.
-  LOCK desiredPitch TO 90 - ((MIN(altRatio, 1)^0.33) * 90).
+  LOCK desiredPitch TO 90 - ((MIN(altRatio, 1)^0.25) * 90).
   
   // throttle related
   LOCAL maxTWR IS SHP_getMaxTWR().
