@@ -27,7 +27,7 @@ function ORB_getTimeToTA {
 FUNCTION ORB_hohmann {
   PARAMETER desiredAltitude.
   
-  LOCAL hohmann IS ORB_hohmann(desiredAltitude).
+  LOCAL hohmann IS ORB_hohmannDv(desiredAltitude).
   
   IF desiredAltitude < ALTITUDE
   {
