@@ -117,6 +117,14 @@ FUNCTION mission_runner
     SET mission["sequence"] TO getSequence().
   }
   
+  // execute runOnce
+  {
+    LOCAL idx IS mission["sequence"]:FIND("runOnce").
+    IF idx >= 0 {
+      mission["sequence"][idx + 1](mission).
+    }
+  }
+  
   // ========================================================
   
   // restore mission stage from file if exists in case of power out/vessel swap
