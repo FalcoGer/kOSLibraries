@@ -189,12 +189,12 @@ FUNCTION printOrbitInfo
   TERM_print("Body: " + SHIP:BODY:NAME, "Orbit", 0).
   TERM_print("AP: " + ROUND(SHIP:ORBIT:APOAPSIS,0) + "m", "Orbit", 1).
   TERM_print("PE: " + ROUND(SHIP:ORBIT:PERIAPSIS,0) + "m", "Orbit", 2).
-  TERM_print("Time AP: " + ROUND(ETA:APOAPSIS,1), "Orbit", 3) + "s".
-  TERM_print("Time PE: " + ROUND(ETA:PERIAPSIS,1), "Orbit", 4) + "s".
+  TERM_print("Time AP: " + ROUND(ETA:APOAPSIS,1) + "s", "Orbit", 3).
+  TERM_print("Time PE: " + ROUND(ETA:PERIAPSIS,1) + "s", "Orbit", 4).
   TERM_print("ECC: " + ROUND(SHIP:ORBIT:ECCENTRICITY, 4), "Orbit", 5).
-  TERM_print("INC: " + ROUND(SHIP:ORBIT:INCLINATION, 4), "Orbit", 6) + "°".
-  TERM_print("Period: " + ROUND(SHIP:ORBIT:PERIOD, 2), "Orbit", 7) + "s".
-  TERM_print("Velocity: " + ROUND(VELOCITYAT(SHIP, TIME:SECONDS):ORBIT:MAG, 1), "Orbit", 8) + "m/s".
+  TERM_print("INC: " + ROUND(SHIP:ORBIT:INCLINATION, 4) + "°", "Orbit", 6).
+  TERM_print("Period: " + ROUND(SHIP:ORBIT:PERIOD, 2) + "s", "Orbit", 7).
+  TERM_print("Velocity: " + ROUND(VELOCITYAT(SHIP, TIME:SECONDS):ORBIT:MAG + "m/s", 1), "Orbit", 8).
   // 9 empty
   TERM_print("Mission Time: " + ROUND(getMissionTime(), 1) + "s", "Orbit", 10).
   TERM_print("Mission Step: " + mission["getStage"](), "Orbit", 11).
