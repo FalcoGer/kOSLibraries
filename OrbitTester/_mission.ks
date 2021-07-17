@@ -31,6 +31,7 @@ FUNCTION init {
   TERM_addRegion("Default", 0, 25, 78, 20).
   
   mission["addEvent"]("printOrbitInfo", printOrbitInfo@).
+  mission["addEvent"]("drawTerm", drawTerm@).
   WAIT 0.1.
   LOCK THROTTLE TO 1.
   mission["nextStage"]().
@@ -41,13 +42,13 @@ FUNCTION ascendFromKerbin {
   
   LOCAL ascend IS BDY_ascendGuidance(100_000).
   
-  TERM_print("Stage: " + ascend["branch"], "Ascend", 0, FALSE).
-  TERM_print("Desired Pitch: " + ROUND(ascend["desiredPitch"], 2) + "°", "Ascend", 1, FALSE).
-  TERM_print("AoA: " + ROUND(ascend["AoA"], 2) + "°", "Ascend", 2, FALSE).
-  TERM_print("AoA Limit: " + ROUND(ascend["AoADynamicLimit"], 2) + "°", "Ascend", 3, FALSE).
-  TERM_print("Atm: " + ROUND(ascend["atmPressure"], 3) + " atm", "Ascend", 4, FALSE).
-  TERM_print("Max TWR: " + ROUND(ascend["maxTWR"], 2), "Ascend", 5, FALSE).
-  TERM_print("Throttle: " + ROUND(ascend["throttle"] * 100, 1) + "%", "Ascend", 6, TRUE).
+  TERM_print("Stage: " + ascend["branch"], "Ascend", 0).
+  TERM_print("Desired Pitch: " + ROUND(ascend["desiredPitch"], 2) + "°", "Ascend", 1).
+  TERM_print("AoA: " + ROUND(ascend["AoA"], 2) + "°", "Ascend", 2).
+  TERM_print("AoA Limit: " + ROUND(ascend["AoADynamicLimit"], 2) + "°", "Ascend", 3).
+  TERM_print("Atm: " + ROUND(ascend["atmPressure"], 3) + " atm", "Ascend", 4).
+  TERM_print("Max TWR: " + ROUND(ascend["maxTWR"], 2), "Ascend", 5).
+  TERM_print("Throttle: " + ROUND(ascend["throttle"] * 100, 1) + "%", "Ascend", 6).
   
   IF SHP_burnout()
   {
@@ -123,14 +124,25 @@ FUNCTION deorbit
 FUNCTION printOrbitInfo 
 {
   PARAMETER mission.
-  TERM_print("Body: " + SHIP:BODY, "Orbit", 0, FALSE).
-  TERM_print("AP: " + ROUND(SHIP:ORBIT:APOAPSIS,0), "Orbit", 1, FALSE).
-  TERM_print("PE: " + ROUND(SHIP:ORBIT:PERIAPSIS,0), "Orbit", 2, FALSE).
-  TERM_print("Time AP: " + ROUND(ETA:APOAPSIS,1), "Orbit", 3, FALSE).
-  TERM_print("Time PE: " + ROUND(ETA:PERIAPSIS,1), "Orbit", 4, FALSE).
-  TERM_print("ECC: " + ROUND(SHIP:ORBIT:ECCENTRICITY, 4), "Orbit", 5, FALSE).
-  TERM_print("Period: " + ROUND(SHIP:ORBIT:PERIOD, 2), "Orbit", 6, FALSE).
-  TERM_print("Velocity: " + ROUND(VELOCITYAT(SHIP, TIME:SECONDS):ORBIT:MAG, 1), "Orbit", 7, TRUE).
+  TERM_print("Body: " + SHIP:BODY:NAME, "Orbit", 0).
+  TERM_print("AP: " + ROUND(SHIP:ORBIT:APOAPSIS,0), "Orbit", 1).
+  TERM_print("PE: " + ROUND(SHIP:ORBIT:PERIAPSIS,0), "Orbit", 2).
+  TERM_print("Time AP: " + ROUND(ETA:APOAPSIS,1), "Orbit", 3).
+  TERM_print("Time PE: " + ROUND(ETA:PERIAPSIS,1), "Orbit", 4).
+  TERM_print("ECC: " + ROUND(SHIP:ORBIT:ECCENTRICITY, 4), "Orbit", 5).
+  TERM_print("Period: " + ROUND(SHIP:ORBIT:PERIOD, 2), "Orbit", 6).
+  TERM_print("Velocity: " + ROUND(VELOCITYAT(SHIP, TIME:SECONDS):ORBIT:MAG, 1), "Orbit", 7).
+  // 8 empty
+  TERM_print("Mission Time: " + ROUND(getMissionTime(), 1) + "s", "Orbit", 9).
+  TERM_print("Mission Step: " + mission["getStage"](), "Orbit", 10).
   
-  RETURN true.
+  RETURN TRUE.
+}
+
+FUNCTION drawTerm
+{
+  PARAMETER mission.
+  
+  TERM_draw().
+  RETURN TRUE.
 }

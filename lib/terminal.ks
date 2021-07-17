@@ -27,7 +27,6 @@ FUNCTION TERM_print
   PARAMETER msg.
   PARAMETER regionName IS "default".
   PARAMETER lineNo IS -1.
-  PARAMETER updateRegion IS TRUE.
   // implement column?
   
   LOCAL region IS regions[regionName].
@@ -53,9 +52,7 @@ FUNCTION TERM_print
     SET lineNo TO lineNo + 1.
   }
   
-  IF updateRegion {
-    TERM_update(region).
-  }
+  SET region["invalid"] TO TRUE.
 }
 
 FUNCTION TERM_clear
@@ -64,7 +61,18 @@ FUNCTION TERM_clear
   LOCAL region IS regions[regionName].
   region["lines"]:CLEAR().
   
-  TERM_update(region).
+  SET region["invalid"] TO TRUE.
+}
+
+FUNCTION TERM_draw
+{
+  FOR regionName IN regions:KEYS {
+    LOCAL region IS regions[regionName].
+    IF region["invalid"]
+    {
+      TERM_update(region).
+    }
+  }
 }
 
 FUNCTION TERM_addRegion
@@ -78,12 +86,12 @@ FUNCTION TERM_addRegion
   IF width <= 2 { LOCAL failure IS 1 / 0. }
   IF height <= 0 { LOCAL failure IS 1 / 0. }
   
-  SET region TO LEXICON("title", title, "x", x, "y", y, "w", width, "h", height, "lines", LIST()).
+  SET region TO LEXICON("title", title, "x", x, "y", y, "w", width, "h", height, "lines", LIST(), "invalid", TRUE).
   
   SET regions[title] TO region.
   
   TERM_addBorder(region).
-  TERM_update(region).
+  TERM_addTitle(region).
 }
 
 FUNCTION TERM_removeRegion
@@ -127,6 +135,8 @@ LOCAL FUNCTION TERM_update
     }
     PRINT lineText AT (termX, termY).
   }
+  
+  SET region["invalid"] TO FALSE.
 }
 
 LOCAL FUNCTION TERM_addBorder
@@ -143,8 +153,6 @@ LOCAL FUNCTION TERM_addBorder
     PRINT leftRightBorder AT (region["x"], y).
   }
   PRINT topBottomBorder AT (region["x"], bottom).
-  
-  TERM_addTitle(region).
 }
 
 LOCAL FUNCTION TERM_addTitle
