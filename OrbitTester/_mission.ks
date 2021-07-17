@@ -42,6 +42,12 @@ FUNCTION ascendFromKerbin {
   
   LOCAL ascend IS BDY_ascendGuidance(100_000).
   
+  LOCAL ascendRegion IS "Ascend".
+  IF NOT TERM_keyExists(ascendRegion)
+  {
+    TERM_addRegion("Ascend", 39, 0, 39, 24).
+  }
+  
   TERM_print("Stage: " + ascend["branch"], "Ascend", 0).
   TERM_print("Desired Pitch: " + ROUND(ascend["desiredPitch"], 2) + "°", "Ascend", 1).
   TERM_print("AoA: " + ROUND(ascend["AoA"], 2) + "°", "Ascend", 2).
