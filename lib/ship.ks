@@ -1,8 +1,7 @@
 FUNCTION SHP_getMaxThrust {
   LOCAL thr IS 0.
-  LOCAL pressure IS CHOOSE 0 IF BODY:ATM:EXISTS ELSE BODY:ATM:ALTITUDEPRESSURE(ALTITUDE).
   FOR engine IN SHP_activeEngines() {
-    SET thr TO thr + engine:AVAILABLETHRUSTAT(pressure).
+    SET thr TO thr + engine:AVAILABLETHRUST().
   }
   return thr.
 }
