@@ -75,6 +75,11 @@ FUNCTION TERM_draw
   }
 }
 
+FUNCTION TERM_keyExists {
+  PARAMETER regionName.
+  RETURN regions:HASKEY(regionName).
+}
+
 FUNCTION TERM_addRegion
 {
   PARAMETER title.
@@ -91,7 +96,12 @@ FUNCTION TERM_addRegion
   SET regions[title] TO region.
   
   TERM_addBorder(region).
-  TERM_addTitle(region).
+  
+  FOR regionName IN regions:KEYS {
+    LOCAL region IS regions[regionName].
+    TERM_addTitle(region).
+  }
+  
 }
 
 FUNCTION TERM_removeRegion
