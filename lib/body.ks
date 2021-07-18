@@ -61,7 +61,7 @@ FUNCTION BDY_ascendGuidance {
   IF NOT (maxTWR < 0.001)
   {
     // throttle down as approaching desired altitude.
-    LOCK THROTTLE TO MIN((desiredTwr / maxTWR), MAX(1 - altRatio, 0)).
+    LOCK THROTTLE TO CHOOSE 1 IF maxTWR <= desiredTWR ELSE MIN((desiredTwr / maxTWR), MAX(1 - altRatio, 0)).
     SET telemetry["throttle"] TO THROTTLE.
   }
   ELSE
