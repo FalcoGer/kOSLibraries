@@ -19,7 +19,10 @@ FUNCTION getSequence {
     "circularizeKerbin", circularizeKerbin@,
     "matchInclination", matchInclination@,
     "intercept", intercept@,
-    "fineTune", fineTune@
+    "fineTune", fineTune@,
+    "killRelative", killRelative@,
+    "docking", docking@,
+    "idle", idle@
   ).
 }
 
@@ -43,7 +46,6 @@ FUNCTION runOnce {
 
 FUNCTION init {
   PARAMETER mission.
-  
   mission["nextStage"]().
 }
 
@@ -103,6 +105,7 @@ FUNCTION matchInclination {
   PARAMETER mission.
   
   IF NOT HASTARGET {
+    TERM_print("Setting target to Target Vessel.").
     SET TARGET TO "Docking Target".
     WAIT 1.
   }
@@ -136,6 +139,7 @@ FUNCTION intercept {
   PARAMETER mission.
   
   IF NOT HASTARGET {
+    TERM_print("Setting target to Target Vessel.").
     SET TARGET TO "Docking Target".
     WAIT 1.
   }
@@ -168,6 +172,7 @@ FUNCTION fineTune {
   PARAMETER mission.
   
   IF NOT HASTARGET {
+    TERM_print("Setting target to Target Vessel.").
     SET TARGET TO "Docking Target".
     WAIT 1.
   }
@@ -181,7 +186,7 @@ FUNCTION fineTune {
   }
   
   IF NOT HASNODE {
-    RDV_fineTuneApproach((ETA:APOAPSIS / 2) + TIME:SECONDS).
+    RDV_fineTuneApproach(500, ETA:APOAPSIS + TIME:SECONDS, (ETA:APOAPSIS / 2) + TIME:SECONDS).
   }
   
   IF SHP_burnout()
@@ -194,6 +199,72 @@ FUNCTION fineTune {
   {
     mission["nextStage"]().
   }
+}
+
+FUNCTION killRelative {
+  PARAMETER mission.
+  
+  IF NOT HASTARGET {
+    TERM_print("Setting target to Target Vessel.").
+    SET TARGET TO "Docking Target".
+    WAIT 1.
+  }
+  
+  LOCAL targetTermRegion IS "Target".
+  
+  IF NOT TERM_keyExists(targetTermRegion)
+  {
+    TERM_addRegion(targetTermRegion, 39, 0, 39, 24).
+    mission["addEvent"]("printTargetInfo", printTargetInfo@).
+  }
+  
+  IF NOT HASNODE {
+    RDV_killRelativeSpeed().
+  }
+  
+  IF SHP_burnout()
+  {
+    STAGE.
+    WAIT 0.2.
+  }
+  
+  IF MNV_nodeExec(TRUE)
+  {
+    WAIT 0.2.
+    mission["nextStage"]().
+  }
+}
+
+FUNCTION docking {
+  PARAMETER mission.
+  
+  LOCAL port IS SHIP:DOCKINGPORTS[0].
+  LOCAL targetPort IS CHOOSE TARGET:DOCKINGPORTS[0] IF TARGET:TYPENAME <> "DockingPort" ELSE TARGET.
+  
+  IF SHIP:CONTROLPART <> port {
+    TERM_print("Changing control point to docking port.").
+    port:CONTROLFROM().
+    WAIT 0.2.
+  }
+  
+  LOCAL targetTermRegion IS "Target".
+  IF NOT TERM_keyExists(targetTermRegion)
+  {
+    TERM_addRegion(targetTermRegion, 39, 0, 39, 24).
+    mission["addEvent"]("printTargetInfo", printTargetInfo@).
+  }
+  
+  IF RDV_docking(port, targetPort, 200) {
+    RCS OFF.
+    mission["removeEvent"]("printTargetInfo").
+    TERM_removeRegion(targetTermRegion).
+    WAIT UNTIL ( port:STATE:FIND("Docked") > -1 ).
+    mission["nextStage"]().
+  } 
+}
+
+FUNCTION idle {
+  PARAMETER mission.
 }
 
 
@@ -309,11 +380,16 @@ FUNCTION printTargetInfo
   
   LOCAL targetTermRegion IS "Target".
   
-  TERM_print("Name: " + TARGET:NAME, targetTermRegion, 0).
-  TERM_print("Distance: " + ROUND(TARGET:POSITION:MAG, 1) + "m", targetTermRegion, 1).
-  TERM_print("RelVel: " + ROUND((TARGET:VELOCITY:ORBIT - SHIP:VELOCITY:ORBIT):MAG, 2) + "m/s", targetTermRegion, 2).
-  TERM_print("Phase Angle: " + ROUND(TGT_phaseAngle(), 1) + "°", targetTermRegion, 3).
+  IF NOT TERM_keyExists(targetTermRegion) { RETURN FALSE. }
+  IF NOT HASTARGET { RETURN TRUE. }  
   
+  LOCAL tgt IS CHOOSE TARGET IF TARGET:TYPENAME <> "DockingPort" ELSE TARGET:SHIP.
+  
+  TERM_print("Name: " + tgt:NAME, targetTermRegion, 0).
+  TERM_print("Distance: " + ROUND(tgt:POSITION:MAG, 1) + "m", targetTermRegion, 1).
+  TERM_print("RelVel: " + ROUND((tgt:VELOCITY:ORBIT - SHIP:VELOCITY:ORBIT):MAG, 2) + "m/s", targetTermRegion, 2).
+  TERM_print("Phase Angle: " + ROUND(TGT_phaseAngle(tgt), 1) + "°", targetTermRegion, 3).
+  TERM_print("Type: " + TARGET:TYPENAME, targetTermRegion, 4).
   
   RETURN TRUE.
 }
