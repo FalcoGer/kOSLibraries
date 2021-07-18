@@ -194,7 +194,7 @@ FUNCTION printOrbitInfo
   TERM_print("ECC: " + ROUND(SHIP:ORBIT:ECCENTRICITY, 4), "Orbit", 5).
   TERM_print("INC: " + ROUND(SHIP:ORBIT:INCLINATION, 4) + "°", "Orbit", 6).
   TERM_print("Period: " + ROUND(SHIP:ORBIT:PERIOD, 2) + "s", "Orbit", 7).
-  TERM_print("Velocity: " + ROUND(VELOCITYAT(SHIP, TIME:SECONDS):ORBIT:MAG + "m/s", 1), "Orbit", 8).
+  TERM_print("Velocity: " + ROUND(VELOCITYAT(SHIP, TIME:SECONDS):ORBIT:MAG, 1) + "m/s", "Orbit", 8).
   // 9 empty
   TERM_print("Mission Time: " + ROUND(getMissionTime(), 1) + "s", "Orbit", 10).
   TERM_print("Mission Step: " + mission["getStage"](), "Orbit", 11).
