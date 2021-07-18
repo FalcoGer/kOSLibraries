@@ -181,8 +181,7 @@ FUNCTION ORB_changeIncl {
                                 // will perform NORMAL UP burn
   
   // get orbital speed at the time as a vector
-  // all orbital speed is prograde from the ship's point of view.
-  LOCAL orbSpeed IS V(0,0,VELOCITYAT(SHIP, t):ORBIT:MAG).
+  LOCAL orbSpeed IS VELOCITYAT(SHIP, t):ORBIT.
   LOCAL normalVector IS ORB_getNormal().
   
   // we want our prograde vector to change by deltaInc towards normal
@@ -194,7 +193,7 @@ FUNCTION ORB_changeIncl {
   LOCAL desiredManeuver IS desiredOrbitalSpeed - orbSpeed.
   
   // radial, normal, prograde
-  LOCAL n IS NODE(t, desiredManeuver:x, desiredManeuver:y, desiredManeuver:z).
+  LOCAL n IS MATH_nodeFromVector(t, desiredManeuver).
   ADD n.
 }
 
