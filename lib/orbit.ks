@@ -29,12 +29,6 @@ FUNCTION ORB_hohmann {
   
   LOCAL hohmann IS ORB_hohmannDv(desiredAltitude).
   
-  IF desiredAltitude < ALTITUDE
-  {
-    SET hohmann[0] TO -1 * hohmann[0].
-    SET hohmann[1] TO -1 * hohmann[1].
-  }
-  
   LOCAL n1 IS NODE(SHIP:ORBIT:ETA:PERIAPSIS + TIME:SECONDS, 0, 0, hohmann[0]).
   ADD n1.
   WAIT 0.03. // wait for orbits to update
