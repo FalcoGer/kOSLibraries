@@ -10,6 +10,8 @@ FUNCTION MATH_vecRotToVec {
   PARAMETER vDest.          // vector we want to rotate to
   PARAMETER theta.          // angle to rotate
   
+  IF theta = 0 { return vSrc. }
+  
   TEST_ASSERT_NOTEQUAL(vSrc:NORMALIZED, vDest:NORMALIZED, "Vectors " + vSrc + " and " + vDest + " need to point in different directions.").
   
   // perform axis-angle rotation around cross product vector (perpendicular to both)
