@@ -164,7 +164,7 @@ FUNCTION RDV_docking
     SET TARGET TO targetPort.
   }
   
-  LOCAL targetPosition TO 
+  LOCK targetPosition TO 
             // we are behind the target. Move to side position first.
             CHOOSE targetPortPos + sideVector IF angleOffset > 90
             // we are in front of the docking port, but not in line
