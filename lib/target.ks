@@ -45,7 +45,6 @@ FUNCTION TGT_transfer
     SET options["max_time_of_flight"] TO max_time_of_flight.
   }
   
-  IF NOT HASTARGET { RETURN FALSE. }  // sanity check
   LOCAL ret IS rsvp["goto"](TARGET, options).
   
   RETURN ret.
@@ -53,15 +52,16 @@ FUNCTION TGT_transfer
 
 // only works for coplanar, circular orbits
 FUNCTION TGT_hohmannTransfer {
+  PARAMETER tgt IS TARGET.
   // https://www.faa.gov/about/office_org/headquarters_offices/avs/offices/aam/cami/library/online_libraries/aerospace_medicine/tutorial/media/III.4.1.5_Maneuvering_in_Space.pdf
     
   LOCAL r1 IS SHIP:ORBIT:SEMIMAJORAXIS.
-  LOCAL r2 IS TARGET:ORBIT:SEMIMAJORAXIS.
+  LOCAL r2 IS tgt:ORBIT:SEMIMAJORAXIS.
   LOCAL dV IS ORB_hohmannDv(r2 - BODY:RADIUS)[0].
   
   // angular velocity
   LOCAL w1 IS ORB_angularVelocityCircular(SHIP).
-  LOCAL w2 IS ORB_angularVelocityCircular(TARGET).
+  LOCAL w2 IS ORB_angularVelocityCircular(tgt).
   
   LOCAL transferTime IS CONSTANT:PI * SQRT( ((r1+r2)/2)^3 / BODY:MU ).
   // how much the target moves during the maneuver
@@ -84,9 +84,9 @@ FUNCTION TGT_hohmannTransfer {
 // considering all maneuver nodes are executed as planned. (POSITIONAT does that)
 FUNCTION TGT_seperationAt {
   PARAMETER t.                  // time to measure the seperation
-  IF NOT HASTARGET { RETURN 0. }  // sanity check
+  PARAMETER tgt IS TARGET.
   
-  RETURN (POSITIONAT(SHIP, t) - POSITIONAT(TARGET, t)):MAG.
+  RETURN (POSITIONAT(SHIP, t) - POSITIONAT(tgt, t)):MAG.
 }
 
 // return rate of change of range to target at time t.
@@ -94,11 +94,11 @@ FUNCTION TGT_seperationAt {
 // rate of change positive: moving closer
 FUNCTION TGT_interceptRoC {
   PARAMETER t.
-  IF NOT HASTARGET { RETURN 0. }  // sanity check
+  PARAMETER tgt IS TARGET.
   
   RETURN (
-    TGT_seperationAt(t + 0.5)
-    - TGT_seperationAt(t - 0.5)
+    TGT_seperationAt(t + 0.5, tgt)
+    - TGT_seperationAt(t - 0.5, tgt)
   ) / 2.
 }
 
@@ -106,13 +106,12 @@ FUNCTION TGT_interceptRoC {
 FUNCTION TGT_closestApproach {
   PARAMETER tStart.
   PARAMETER tEnd.
-  
-  IF NOT HASTARGET { RETURN LIST(0,0). }  // sanity check
+  PARAMETER tgt IS TARGET.
   
   LOCAL tMiddle IS (tStart + tEnd) / 2.
-  LOCAL rocStart IS TGT_interceptRoC(tStart).
-  LOCAL rocEnd IS TGT_interceptRoC(tEnd).
-  LOCAL rocMiddle IS TGT_interceptRoC(tMiddle).
+  LOCAL rocStart IS TGT_interceptRoC(tStart, tgt).
+  LOCAL rocEnd IS TGT_interceptRoC(tEnd, tgt).
+  LOCAL rocMiddle IS TGT_interceptRoC(tMiddle, tgt).
   
   LOCAL LIMIT_TIME IS 0.1.    // when we found the closest approach time down to this many seconds
   LOCAL LIMIT_SLOPE IS 0.1.   // when we found the closest approach to this many m/s approach speed
@@ -128,26 +127,28 @@ FUNCTION TGT_closestApproach {
       SET tEnd TO tMiddle.
     }
     SET tMiddle TO (tStart + tEnd) / 2.
-    SET rocMiddle TO TGT_interceptRoC(tMiddle).
+    SET rocMiddle TO TGT_interceptRoC(tMiddle, tgt).
   }
   
-  RETURN LIST(TGT_seperationAt(tMiddle), tMiddle).
+  RETURN LIST(TGT_seperationAt(tMiddle, tgt), tMiddle).
 }
 
 // returns true if the next patch is in the target's SOI
 FUNCTION TGT_isSOIChangeToTgt {
   PARAMETER orbitToTest IS CHOOSE 
     NEXTNODE:ORBIT IF HASNODE ELSE SHIP:ORBIT.
+  PARAMETER tgt IS TARGET.
   
   // sanity check
-  IF (NOT HASTARGET) OR (TARGET:TYPENAME <> "Body") { RETURN FALSE. }
+  IF (NOT HASTARGET) OR (tgt:TYPENAME <> "Body") { RETURN FALSE. }
   
-  RETURN ORBIT:HASNEXTPATCH AND ORBIT:NEXTPATCH:BODY = TARGET.
+  RETURN ORBIT:HASNEXTPATCH AND ORBIT:NEXTPATCH:BODY = tgt.
 }
 
 // finds times to AN and DN and returns them as a list.
 FUNCTION TGT_findAN_DN_time
 {
+  PARAMETER tgt IS CHOOSE TARGET IF HASTARGET ELSE SHIP.
   // const indexes
   LOCAL AN IS 0.
   LOCAL DN is 1.
@@ -166,8 +167,8 @@ FUNCTION TGT_findAN_DN_time
   
   // parameters for orbital plane for
   // MATH_distancePointToPlane(POSITIONAT(SHIP, t) - sbp, tgtNorm, tgtPos)
-  LOCAL tgtNorm IS CHOOSE ORB_getNormal(TARGET) IF HASTARGET AND TARGET <> SHIP:BODY ELSE ORB_getNormal(SHIP:BODY).
-  LOCAL tgtPos IS CHOOSE POSITIONAT(TARGET, startTime) - sbp IF HASTARGET AND TARGET <> SHIP:BODY ELSE VCRS(POSITIONAT(SHIP, startTime) - sbp, tgtNorm).
+  LOCAL tgtNorm IS CHOOSE ORB_getNormal(tgt) IF tgt <> SHIP AND tgt <> SHIP:BODY ELSE ORB_getNormal(SHIP:BODY).
+  LOCAL tgtPos IS CHOOSE POSITIONAT(tgt, startTime) - sbp IF tgt <> SHIP AND tgt <> SHIP:BODY ELSE VCRS(POSITIONAT(SHIP, startTime) - sbp, tgtNorm).
   
   
   LOCAL lastD IS MATH_distancePointToPlane(POSITIONAT(SHIP, startTime - timeStep) - sbp, tgtNorm, tgtPos).
@@ -217,8 +218,10 @@ FUNCTION TGT_findAN_DN_time
 // generate a node to match target inclination.
 // TODO: fix no target inclination change to 0
 FUNCTION TGT_matchInclination {
-  LOCAL anDn IS TGT_findAN_DN_time().
-  LOCAL deltaInc IS CHOOSE VANG(ORB_getNormal(), ORB_getNormal(TARGET)) IF HASTARGET AND TARGET <> SHIP:BODY ELSE SHIP:ORBIT:INCLINATION.
+  PARAMETER tgt IS CHOOSE TARGET IF HASTARGET ELSE SHIP.
+  
+  LOCAL anDn IS TGT_findAN_DN_time(tgt).
+  LOCAL deltaInc IS CHOOSE VANG(ORB_getNormal(), ORB_getNormal(tgt)) IF tgt <> SHIP AND tgt <> SHIP:BODY ELSE SHIP:ORBIT:INCLINATION.
   
   // generate maneuver node at next slowest an or dn
   LOCAL vAN IS VELOCITYAT(SHIP, anDn[0]):ORBIT:MAG.
@@ -234,11 +237,12 @@ FUNCTION TGT_matchInclination {
 }
 
 FUNCTION TGT_phaseAngle {
-  IF NOT HASTARGET { RETURN 0. }
+  PARAMETER tgt IS CHOOSE TARGET IF HASTARGET ELSE SHIP.
+  IF tgt = SHIP { RETURN 0. }
   
   LOCAL bdyPos IS SHIP:BODY:POSITION.
   LOCAL bdyToShip IS bdyPos * -1.
-  LOCAL bdyToTgt IS TARGET:POSITION - bdyPos.
+  LOCAL bdyToTgt IS tgt:POSITION - bdyPos.
   
   LOCAL angle IS VANG(bdyToShip, bdyToTgt).
   LOCAL crs IS VCRS(bdyToShip, bdyToTgt). // points down if ahead, up otherwise.

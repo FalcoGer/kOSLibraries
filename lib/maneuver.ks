@@ -68,7 +68,7 @@ FUNCTION MNV_nodeExec {
         }
         ELSE {
           // RCS required for final correction to below allowedDvError
-          IF mnvDv < allowedDvError // need correction still?
+          IF mnvDv > allowedDvError // need correction still?
           {
             IF NOT RCS { RCS ON. }
             MNV_translation(NEXTNODE:BURNVECTOR).
