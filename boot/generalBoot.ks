@@ -55,16 +55,16 @@ RUNONCEPATH("helperFunctions").
 
 print "Helper Functions loaded.".
 
-FUNCTION main
+LOCAL FUNCTION main
 {
   PRINT "Starting mission runner.".
   mission_runner().
 }
 
 // mission holds pointers to helper functions and datastructures about the mission
-GLOBAL mission IS LEXICON().
+LOCAL mission IS LEXICON().
 
-FUNCTION mission_runner
+LOCAL FUNCTION mission_runner
 {
   // ========================================================
   // initialize mission functions
@@ -170,7 +170,7 @@ FUNCTION mission_runner
 }
 
 // advances to the next stage in sequence or terminates the mission if no more stages
-FUNCTION nextStage {
+LOCAL FUNCTION nextStage {
   LOCAL curStageName IS mission["currentStage"].
   LOCAL stageIdx IS mission["sequence"]:FIND(curStageName).
   LOCAL seqLen IS mission["sequence"]:LENGTH().
@@ -187,7 +187,7 @@ FUNCTION nextStage {
 }
 
 // sets specified stage from the sequence. if not found will print error and terminate
-FUNCTION setStage {
+LOCAL FUNCTION setStage {
   PARAMETER stageName.
   
   // delete old backup
@@ -211,18 +211,18 @@ FUNCTION setStage {
   fileHandle:WRITE(stageName).
 }
 
-FUNCTION getStage {
+LOCAL FUNCTION getStage {
   RETURN mission["currentStage"].
 }
 
-FUNCTION addEvent {
+LOCAL FUNCTION addEvent {
   PARAMETER eventName.
   PARAMETER eventFunc.
   
   SET mission["events"][eventName] TO eventFunc.
 }
 
-FUNCTION removeEvent {
+LOCAL FUNCTION removeEvent {
   PARAMETER eventName.
   
   IF mission["events"]:HASKEY(eventName) {
@@ -234,7 +234,7 @@ FUNCTION removeEvent {
   }
 }
 
-FUNCTION terminate {
+LOCAL FUNCTION terminate {
   // delete mission script so we don't start a new mission on reboot
   IF CORE:VOLUME:EXISTS (missionScript)
   {
@@ -259,7 +259,7 @@ FUNCTION terminate {
 }
 
 // event to check for mission update
-FUNCTION evt_checkMissionUpdate {
+LOCAL FUNCTION evt_checkMissionUpdate {
   PARAMETER mission.
   
   LOCAL archivePath IS "0:/" + SHIP:NAME + "/" + missionScript.
