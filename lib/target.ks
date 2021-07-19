@@ -2,7 +2,6 @@
 
 REQUIRE("lib/math.ks").
 REQUIRE("lib/orbit.ks").
-REQUIRE("lib/test.ks").
 REQUIRE("lib/maneuver.ks").
 
 RUNONCEPATH("0:/lib/rsvp/main.ks").
@@ -78,6 +77,50 @@ FUNCTION TGT_hohmannTransfer {
   
   LOCAL n IS NODE(TIME:SECONDS + etaMnv, 0, 0, dV).
   ADD n.
+}
+
+FUNCTION TGT_fineTuneApproach {
+  PARAMETER finalPE.                        // final closest approach
+  PARAMETER finalInclination IS 0.
+  PARAMETER mnvTime IS TIME:SECONDS + 120.  // when correction burn is scheduled
+  // use hill climbing to fine tune approach
+  PARAMETER tgt IS TARGET.
+  
+  LOCAL initialData IS LIST(mnvTime,0,0,0, finalPE, finalInclination, tgt).
+  LOCAL stepSize IS LIST(0, 16, 16, 16, 0, 0, 0).
+  LOCAL fitnessFunction IS TGT_fitnessFineTuneApproach@.
+  LOCAL numOfSteps IS 10.
+  
+  LOCAL nodeData IS MATH_hillClimb(initialData, stepSize, fitnessFunction, numOfSteps).
+  
+  ADD NODE(nodeData[0], nodeData[1], nodeData[2], nodeData[3]).
+}
+
+LOCAL FUNCTION TGT_fitnessFineTuneApproach {
+  PARAMETER data.
+  
+  // unpack data
+  LOCAL t IS data[0].
+  LOCAL n IS NODE(t, data[1], data[2], data[3]).
+  LOCAL finalPE IS data[4].
+  LOCAL finalInclination IS data[5].
+  LOCAL tgt IS data[6].
+  
+  ADD n.
+  WAIT 0.02.
+  
+  // calculate fitness
+  
+  // if we have left SOI change
+  IF (NOT n:ORBIT:HASNEXTPATCH OR n:ORBIT:NEXTPATCH:BODY <> tgt) AND n:ORBIT:BODY <> tgt { RETURN -1 * MATH_infinity. }
+  
+  LOCAL actualPE IS n:ORBIT:NEXTPATCH:PERIAPSIS.
+  LOCAL actualINC IS n:ORBIT:NEXTPATCH:INCLINATION.
+  LOCAL dV IS n:BURNVECTOR:MAG.
+  
+  REMOVE n.
+  
+  RETURN -1 * (ABS(actualPE - finalPE) * ABS(actualINC - finalInclination) + (dV / 4)).
 }
 
 // return the seperation at a specified time
