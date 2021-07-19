@@ -24,6 +24,10 @@ aircraft:
 - set speed          (pid -> (lots of) negative means speed brakes?)
 - set vertical speed (PID -> pitch (limit AoA, limit pitchup))
 - SSTO?
+FUNCTION current_mach_number {
+	LOCAL currentPresure IS BODY:ATM:ALTITUDEPRESSURE(SHIP:ALTITUDE).
+	RETURN CHOOSE SQRT(2 / BODY:ATM:ADIABATICINDEX * SHIP:Q / currentPresure) IF currentPresure > 0 ELSE 0.
+}
 
 maneuver scripts:
 orbital:
