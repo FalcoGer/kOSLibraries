@@ -38,7 +38,7 @@ FROM {LOCAL i IS CHOOSE 30 IF DEBUG ELSE 0.} UNTIL (i <= 0) STEP { SET i TO i-1.
 }
 
 // compile and load helperFunctions if not already on the file system (reboot).
-IF NOT DEBUG {
+IF DEBUG {
   IF NOT EXISTS("helperFunctions.ksm") {
     PRINT "Fetching Helper Functions...".
     COPYPATH("0:/helperFunctions.ks", "helperFunctions.ks").
@@ -166,7 +166,6 @@ LOCAL FUNCTION mission_runner
     // don't trash the CPU
     WAIT 0. // wait for the rest of the physics tick
   }
-  
 }
 
 // advances to the next stage in sequence or terminates the mission if no more stages
@@ -280,7 +279,12 @@ LOCAL FUNCTION evt_checkMissionUpdate {
     }
     
     // move mission file on archive to new location
-    MOVEPATH(archivePath, executedDir + "/mission." + cnt + ".ks").
+    WAIT 1. // wait a second for all cores to get the new mission file.
+    
+    IF EXISTS(archivePath) {
+      MOVEPATH(archivePath, executedDir + "/mission." + cnt + ".ks").
+    }
+    
     addMissionCounter().
     
     IF EXISTS(stageBackup)
