@@ -130,7 +130,7 @@ LOCAL FUNCTION mission_runner
   // restore mission stage from file if exists in case of power out/vessel swap
   // otherwise leave mission stage at "init".
   IF CORE:VOLUME:EXISTS(stageBackup) {
-    SET mission["currentStage"] TO OPEN(stageBackup):READALL:STRING.
+    SET mission["currentStage"] TO OPEN(stageBackup):READALL:STRING:SPLIT("\n")[0].
   }
   ELSE
   {
@@ -151,9 +151,15 @@ LOCAL FUNCTION mission_runner
     }
     // if none found, just keep in the loop anyway, but wait a bit to save power.
     // event checkMissionUpdate will check for mission updates from KSC
-    ELSE {
-      PRINT "No mission, waiting for " + SHIP:NAME + "/" + missionScript + " on archive." AT (0,1).
-      PRINT lineDelim AT (0, 2).
+    ELSE IF mission["sequence"]:LENGTH > 0 {
+      PRINT "currentStage: " + mission["currentStage"] AT (0, 0).
+      PRINT "Not found in Sequence." AT (0, 1).
+      FOR idx IN RANGE(0, mission["sequence"]:LENGTH, 2) {
+        PRINT (idx / 2) + ": " +  mission["sequence"][idx] + "   " AT (0, 2 + idx / 2).
+      }
+    } ELSE {
+      PRINT "No mission, waiting for " + SHIP:NAME + "/" + missionScript + " on archive." AT (0, 0).
+      PRINT lineDelim AT (0, 1).
     }
     
     // do events
