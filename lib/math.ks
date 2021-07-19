@@ -1,7 +1,5 @@
 // a variety of math functions
 
-REQUIRE("lib/test.ks").
-
 GLOBAL MATH_INFINITY IS 2^1023.
 
 // rotate a vector towards another vector by a specified angle (deg)
@@ -11,8 +9,6 @@ FUNCTION MATH_vecRotToVec {
   PARAMETER theta.          // angle to rotate
   
   IF theta = 0 { return vSrc. }
-  
-  TEST_ASSERT_NOTEQUAL(vSrc:NORMALIZED, vDest:NORMALIZED, "Vectors " + vSrc + " and " + vDest + " need to point in different directions.").
   
   // perform axis-angle rotation around cross product vector (perpendicular to both)
   // to do that we use the https://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula
