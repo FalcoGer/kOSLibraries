@@ -108,6 +108,27 @@ FUNCTION TGT_closestApproach {
   PARAMETER tEnd.
   PARAMETER tgt IS TARGET.
   
+  // can't rely on binary search alone, orbit may intersect twice, giving 2 local minima
+  
+  // run over the entire timeFrame to find roughly where the closest approach is
+  {
+    LOCAL bestSeperation IS MATH_infinity.
+    LOCAL bestTime IS tStart.
+    // at least 36 steps per orbit or 36 steps
+    LOCAL deltaTime IS MIN((tEnd - tStart), SHIP:ORBIT:PERIOD) / 36.
+    FROM { LOCAL t IS tStart. } UNTIL ( t >= tEnd ) STEP { SET t TO t + deltaTime. } DO {
+      IF TGT_seperationAt(t, tgt) < bestSeperation
+      {
+        SET bestSeperation TO sep.
+        SET bestTime TO t.
+      }
+    }
+    
+    SET tStart TO bestTime.
+    SET tEnd TO bestTime + deltaTime.
+  }
+  
+  // run binary search to find the precise position.
   LOCAL tMiddle IS (tStart + tEnd) / 2.
   LOCAL rocStart IS TGT_interceptRoC(tStart, tgt).
   LOCAL rocEnd IS TGT_interceptRoC(tEnd, tgt).
@@ -216,7 +237,6 @@ FUNCTION TGT_findAN_DN_time
 }
 
 // generate a node to match target inclination.
-// TODO: fix no target inclination change to 0
 FUNCTION TGT_matchInclination {
   PARAMETER tgt IS CHOOSE TARGET IF HASTARGET ELSE SHIP.
   
