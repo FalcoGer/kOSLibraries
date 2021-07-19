@@ -119,7 +119,7 @@ LOCAL FUNCTION TGT_fitnessFineTuneApproach {
   LOCAL fitness IS CHOOSE
     -1 * MATH_infinity
     // if we have left SOI change
-    IF (NOT n:ORBIT:HASNEXTPATCH OR n:ORBIT:NEXTPATCH:BODY <> tgt) AND n:ORBIT:BODY <> tgt
+    IF (n:ORBIT:HASNEXTPATCH AND n:ORBIT:NEXTPATCH:BODY <> tgt) AND n:ORBIT:BODY <> tgt
     // else optimize for PE, INC and dV
     ELSE -1 * (ABS(actualPE - finalPE) * ABS(actualINC - finalInclination) + (dV / 4)).
   
