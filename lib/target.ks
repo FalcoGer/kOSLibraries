@@ -77,6 +77,7 @@ FUNCTION TGT_hohmannTransfer {
   
   LOCAL n IS NODE(TIME:SECONDS + etaMnv, 0, 0, dV).
   ADD n.
+  WAIT 0.02.
 }
 
 FUNCTION TGT_fineTuneApproach {
@@ -93,15 +94,16 @@ FUNCTION TGT_fineTuneApproach {
   
   LOCAL nodeData IS MATH_hillClimb(initialData, stepSize, fitnessFunction, numOfSteps).
   
-  ADD NODE(nodeData[0], nodeData[1], nodeData[2], nodeData[3]).
+  LOCAL n IS NODE(nodeData[0], nodeData[1], nodeData[2], nodeData[3]).
+  ADD n.
+  WAIT 0.02.
 }
 
 LOCAL FUNCTION TGT_fitnessFineTuneApproach {
   PARAMETER data.
   
   // unpack data
-  LOCAL t IS data[0].
-  LOCAL n IS NODE(t, data[1], data[2], data[3]).
+  LOCAL n IS NODE(data[0], data[1], data[2], data[3]).
   LOCAL finalPE IS data[4].
   LOCAL finalInclination IS data[5].
   LOCAL tgt IS data[6].
@@ -110,17 +112,21 @@ LOCAL FUNCTION TGT_fitnessFineTuneApproach {
   WAIT 0.02.
   
   // calculate fitness
-  
-  // if we have left SOI change
-  IF (NOT n:ORBIT:HASNEXTPATCH OR n:ORBIT:NEXTPATCH:BODY <> tgt) AND n:ORBIT:BODY <> tgt { RETURN -1 * MATH_infinity. }
-  
   LOCAL actualPE IS n:ORBIT:NEXTPATCH:PERIAPSIS.
   LOCAL actualINC IS n:ORBIT:NEXTPATCH:INCLINATION.
   LOCAL dV IS n:BURNVECTOR:MAG.
   
-  REMOVE n.
+  LOCAL fitness IS CHOOSE
+    -1 * MATH_infinity
+    // if we have left SOI change
+    IF (NOT n:ORBIT:HASNEXTPATCH OR n:ORBIT:NEXTPATCH:BODY <> tgt) AND n:ORBIT:BODY <> tgt
+    // else optimize for PE, INC and dV
+    ELSE -1 * (ABS(actualPE - finalPE) * ABS(actualINC - finalInclination) + (dV / 4))
   
-  RETURN -1 * (ABS(actualPE - finalPE) * ABS(actualINC - finalInclination) + (dV / 4)).
+  REMOVE n.
+  WAIT 0.02.
+  
+  RETURN fitness.
 }
 
 // return the seperation at a specified time
