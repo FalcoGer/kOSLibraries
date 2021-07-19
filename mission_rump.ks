@@ -74,7 +74,7 @@ FUNCTION ascendFromKerbin {
   }
 }
 
-FUNCTION circularizeKerbin
+LOCAL FUNCTION circularizeKerbin
 {
   PARAMETER mission.
   
@@ -82,16 +82,7 @@ FUNCTION circularizeKerbin
     ORB_cirularize(ETA:APOAPSIS + TIME:SECONDS).
   }
   
-  IF SHP_burnout()
-  {
-    STAGE.
-    WAIT 0.2.
-  }
-  
-  IF MNV_nodeExec(TRUE)
-  {
-    mission["nextStage"]().
-  }
+  execNodeWithAutostage(mission, 0).
 }
 
 
@@ -99,7 +90,7 @@ FUNCTION circularizeKerbin
 // ===================================================
 // events
 
-FUNCTION deployDeployables {
+LOCAL FUNCTION deployDeployables {
   PARAMETER mission.
   
   LOCAL solarDeployModuleName IS "ModuleDeployableSolarPanel".
@@ -148,7 +139,7 @@ FUNCTION deployDeployables {
   RETURN TRUE.
 }
 
-FUNCTION retractRetractables {
+LOCAL FUNCTION retractRetractables {
   PARAMETER mission.
   
   LOCAL solarDeployModuleName IS "ModuleDeployableSolarPanel".
@@ -183,7 +174,7 @@ FUNCTION retractRetractables {
   RETURN TRUE.
 }
 
-FUNCTION printOrbitInfo 
+LOCAL FUNCTION printOrbitInfo 
 {
   PARAMETER mission.
   TERM_print("Body: " + SHIP:BODY:NAME, "Orbit", 0).
@@ -202,10 +193,34 @@ FUNCTION printOrbitInfo
   RETURN TRUE.
 }
 
-FUNCTION drawTerm
+LOCAL FUNCTION drawTerm
 {
   PARAMETER mission.
   
   TERM_draw().
   RETURN TRUE.
+}
+
+LOCAL FUNCTION execNodeWithAutostage
+{
+  PARAMETER mission.
+  PARAMETER maxStageNum IS 0.
+  
+  autostage(maxStageNum).
+  
+  IF MNV_nodeExec(TRUE)
+  {
+    mission["nextStage"]().
+  }
+}
+
+LOCAL FUNCTION autostage
+{
+  PARAMETER maxStageNum.
+  
+  IF SHP_burnout() AND SHIP:STAGENUM >= maxStageNum
+  {
+    STAGE.
+    WAIT 0.2.
+  }
 }
