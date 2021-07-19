@@ -70,7 +70,7 @@ FUNCTION TGT_hohmannTransfer {
   SET phaseAngle TO MOD(phaseAngle + 360, 360).
   
   // calculate the wait time for the phase angle to be perfect
-  LOCAL currentPhaseAngle IS TGT_phaseAngle().
+  LOCAL currentPhaseAngle IS TGT_phaseAngle(tgt).
   
   // current difference to perfect angle / phase angle change rate
   LOCAL etaMnv IS (phaseAngle - currentPhaseAngle) / (w2 - w1).
@@ -112,8 +112,8 @@ LOCAL FUNCTION TGT_fitnessFineTuneApproach {
   WAIT 0.02.
   
   // calculate fitness
-  LOCAL actualPE IS CHOOSE n:ORBIT:NEXTPATCH:PERIAPSIS IF n:HASNEXTPATCH ELSE ORBIT:PERIAPSIS.
-  LOCAL actualINC IS CHOOSE n:ORBIT:NEXTPATCH:INCLINATION IF n:HASNEXTPATCH ELSE ORBIT:INCLINATION.
+  LOCAL actualPE IS CHOOSE n:ORBIT:NEXTPATCH:PERIAPSIS IF n:ORBIT:HASNEXTPATCH ELSE ORBIT:PERIAPSIS.
+  LOCAL actualINC IS CHOOSE n:ORBIT:NEXTPATCH:INCLINATION IF n:ORBIT:HASNEXTPATCH ELSE ORBIT:INCLINATION.
   LOCAL dV IS n:BURNVECTOR:MAG.
   
   LOCAL fitness IS CHOOSE
