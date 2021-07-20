@@ -137,6 +137,8 @@ LOCAL FUNCTION mission_runner
     SET mission["currentStage"] TO "init".
   }
   
+  LOCAL indicatorStatus IS 0.
+  
   // ========================================================
   
   // main loop
@@ -168,6 +170,18 @@ LOCAL FUNCTION mission_runner
       IF NOT keep {
         mission["removeEvent"](key).
       }
+    }
+    
+    // print indicator that things are running
+    {
+      LOCAL indicator IS CHOOSE "|" IF indicatorStatus = 0
+                    ELSE CHOOSE "/" IF indicatorStatus = 1
+                    ELSE CHOOSE "-" IF indicatorStatus = 2
+                    ELSE        "\".
+      SET indicatorStatus TO MOD(indicatorStatus + 1, 4).
+      LOCAL x IS TERMINAL:WIDTH - 2.
+      LOCAL y IS TERMINAL:HEIGHT - 1.
+      PRINT indicator AT (x, y).
     }
     // don't trash the CPU
     WAIT 0. // wait for the rest of the physics tick
