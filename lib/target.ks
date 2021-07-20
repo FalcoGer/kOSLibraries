@@ -74,6 +74,10 @@ FUNCTION TGT_hohmannTransfer {
   
   // current difference to perfect angle / phase angle change rate
   LOCAL etaMnv IS (phaseAngle - currentPhaseAngle) / (w2 - w1).
+  IF etaMnv < 0 {
+    // add 360 to make node be in the next orbit.
+    SET etaMnv TO (phaseAngle + 360 - currentPhaseAngle) / (w2 - w1).
+  }
   
   LOCAL n IS NODE(TIME:SECONDS + etaMnv, 0, 0, dV).
   ADD n.
@@ -109,7 +113,7 @@ LOCAL FUNCTION TGT_fitnessFineTuneApproach {
   LOCAL tgt IS data[6].
   
   ADD n.
-  WAIT 0.02.
+  WAIT 0.05.
   
   // calculate fitness
   LOCAL actualPE IS CHOOSE n:ORBIT:NEXTPATCH:PERIAPSIS IF n:ORBIT:HASNEXTPATCH ELSE ORBIT:PERIAPSIS.
@@ -119,7 +123,7 @@ LOCAL FUNCTION TGT_fitnessFineTuneApproach {
   LOCAL fitness IS CHOOSE
     -1 * MATH_infinity
     // if we have left SOI change
-    IF (n:ORBIT:HASNEXTPATCH AND n:ORBIT:NEXTPATCH:BODY <> tgt) AND n:ORBIT:BODY <> tgt
+    IF (n:ORBIT:HASNEXTPATCH AND n:ORBIT:NEXTPATCH:BODY <> tgt) OR (NOT n:ORBIT:HASNEXTPATCH AND n:ORBIT:BODY <> tgt)
     // else optimize for PE, INC and dV
     ELSE -1 * (ABS(actualPE - finalPE) * ABS(actualINC - finalInclination) + (dV / 4)).
   
