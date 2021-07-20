@@ -42,9 +42,8 @@ FUNCTION TGT_transfer
     SET options["max_time_of_flight"] TO max_time_of_flight.
   }
   
-  WAIT UNTIL CHECK_CONNECTION() {
-    RUNONCEPATH("0:/lib/rsvp/main.ks").
-  }
+  WAIT UNTIL CHECK_CONNECTION().
+  RUNONCEPATH("0:/lib/rsvp/main.ks").
   
   LOCAL ret IS rsvp["goto"](TARGET, options).
   
@@ -240,7 +239,7 @@ FUNCTION TGT_findAN_DN_time
   LOCAL endTime IS startTime + SHIP:ORBIT:PERIOD.
   
   // to convert to body centric reference frame.
-  LOCK sbp TO SHIP:BODY:POSITION.
+  LOCAL sbp TO SHIP:BODY:POSITION.
   
   // parameters for orbital plane for
   // MATH_distancePointToPlane(POSITIONAT(SHIP, t) - sbp, tgtNorm, tgtPos)
