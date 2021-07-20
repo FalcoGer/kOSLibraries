@@ -184,7 +184,11 @@ LOCAL FUNCTION printOrbitInfo
   TERM_print("Time PE: " + ROUND(ETA:PERIAPSIS,1) + "s", "Orbit", 4).
   TERM_print("ECC: " + ROUND(SHIP:ORBIT:ECCENTRICITY, 4), "Orbit", 5).
   TERM_print("INC: " + ROUND(SHIP:ORBIT:INCLINATION, 4) + "°", "Orbit", 6).
-  TERM_print("Period: " + CHOOSE (ROUND(SHIP:ORBIT:PERIOD, 2) + "s") IF SHIP:ORBIT:ECCENTRICITY < 0.999 ELSE "N/A", "Orbit", 7).
+  LOCAL periodString IS
+    CHOOSE (ROUND(SHIP:ORBIT:PERIOD, 2) + "s")
+      IF SHIP:ORBIT:ECCENTRICITY < 0.999 AND NOT SHIP:ORBIT:HASNEXTPATCH
+      ELSE "N/A".
+  TERM_print("Period: " + periodString, "Orbit", 7).
   TERM_print("Velocity: " + ROUND(VELOCITYAT(SHIP, TIME:SECONDS):ORBIT:MAG, 1) + "m/s", "Orbit", 8).
   // 9 empty
   TERM_print("Mission Time: " + ROUND(getMissionTime(), 1) + "s", "Orbit", 10).
