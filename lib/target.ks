@@ -4,8 +4,6 @@ REQUIRE("lib/math.ks").
 REQUIRE("lib/orbit.ks").
 REQUIRE("lib/maneuver.ks").
 
-RUNONCEPATH("0:/lib/rsvp/main.ks").
-
 FUNCTION TGT_transfer
 {
   PARAMETER bothNodes IS TRUE.                // if false, will only plot starting node
@@ -42,6 +40,10 @@ FUNCTION TGT_transfer
   
   IF max_time_of_flight >= 0 {
     SET options["max_time_of_flight"] TO max_time_of_flight.
+  }
+  
+  WAIT UNTIL CHECK_CONNECTION() {
+    RUNONCEPATH("0:/lib/rsvp/main.ks").
   }
   
   LOCAL ret IS rsvp["goto"](TARGET, options).
@@ -170,7 +172,8 @@ FUNCTION TGT_closestApproach {
     // at least 36 steps per orbit or 36 steps
     LOCAL deltaTime IS MIN((tEnd - tStart), SHIP:ORBIT:PERIOD) / 36.
     FROM { LOCAL t IS tStart. } UNTIL ( t >= tEnd ) STEP { SET t TO t + deltaTime. } DO {
-      IF TGT_seperationAt(t, tgt) < bestSeperation
+      LOCAL sep IS TGT_seperationAt(t, tgt).
+      IF sep < bestSeperation
       {
         SET bestSeperation TO sep.
         SET bestTime TO t.
