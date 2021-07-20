@@ -13,8 +13,12 @@ IF DEBUG = TRUE {
   COPYPATH("0:/boot/generalBoot.ks", "/boot/").
 } ELSE IF NOT CORE:VOLUME:EXISTS("generalBoot.ksm") OR HOMECONNECTION:ISCONNECTED() {
   PRINT "2nd Stage compile.".
-  WAIT UNTIL HOMECONNECTION:ISCONNECTED().
-  COMPILE "0:/boot/generalBoot.ks" TO "1:/boot/generalBoot.ksm".
+  IF HOMECONNECTION:ISCONNECTED() OR NOT EXISTS("/boot/generalBoot.ksm") {
+    WAIT UNTIL HOMECONNECTION:ISCONNECTED().
+    COMPILE "0:/boot/generalBoot.ks" TO "/boot/generalBoot.ksm".
+  }
+  
+  
 }
 
 PRINT "Stage 1 done.".
