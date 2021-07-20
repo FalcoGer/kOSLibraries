@@ -25,12 +25,13 @@ FUNCTION LDG_descendGuidance
     AND (ALT:RADAR > safetyAltitude)
   {
     // 2. Suicide burn
-    
-    LOCK STEERING TO LDG_descendVector().
-    LOCK THROTTLE TO
-      CHOOSE 0 IF (LDG_impactTime(safetyAltitude) < 0.5)
+    LOCAL steer IS LDG_descendVector().
+    LOCAL throt IS CHOOSE 0 IF (LDG_impactTime(safetyAltitude) < 0.5)
       ELSE CHOOSE 1 IF ALT:RADAR > safetyAltitude
       ELSE MIN(1 / SHP_getMaxTWR(), 1).
+    LOCK STEERING TO steer.
+    LOCK THROTTLE TO throt.
+      
     SET resetPID TO TRUE.
   } ELSE IF (SHIP:STATUS = "SUB_ORBITAL" OR SHIP:STATUS = "FLYING")
     AND ((ALT:RADAR - shipSize) > 10)
@@ -39,17 +40,22 @@ FUNCTION LDG_descendGuidance
     IF NOT GEAR { GEAR ON. }
     IF resetPID { PID_hover:RESET. SET resetPID TO FALSE. }
     
-    LOCK STEERING TO LDG_descendVector().
-    LOCK descendSpeed TO MIN(((ALT:RADAR - shipSize) / safetyAltitude)* -50, -1).
-    LOCK THROTTLE TO LDG_hover(descendSpeed).
+    LOCAL STEER IS LDG_descendVector().
+    LOCK STEERING TO steer.
+    LOCAL descendSpeed TO MIN(((ALT:RADAR - shipSize) / safetyAltitude)* -50, -1).
+    LOCAL throt IS LDG_hover(descendSpeed).
+    LOCK THROTTLE TO throt.
   } ELSE {
     // 4. hover landing
-    LOCK STEERING TO LOOKDIRUP(UP:VECTOR, SHIP:FACING:TOPVECTOR).
-    LOCK THROTTLE TO LDG_hover(-1 * touchDownSpeed).
+    LOCAL steer IS LOOKDIRUP(UP:VECTOR, SHIP:FACING:TOPVECTOR).
+    LOCK STEERING TO steer.
+    LOCAL throt IS LDG_hover(-1 * touchDownSpeed).
+    LOCK THROTTLE TO throt.
   }
   
   IF SHIP:STATUS = "LANDED" OR SHIP:STATUS = "SPLASHED" {
-    LOCK STEERING TO LOOKDIRUP(UP:VECTOR, SHIP:FACING:TOPVECTOR).
+    LOCAL STEER IS LOOKDIRUP(UP:VECTOR, SHIP:FACING:TOPVECTOR).
+    LOCK STEERING TO steer.
     LOCK THROTTLE TO 0.
     WAIT 3.
     UNLOCK STEERING.

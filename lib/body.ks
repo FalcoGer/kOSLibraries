@@ -9,14 +9,14 @@ FUNCTION BDY_ascendGuidance {
   PARAMETER AoALimit IS 5.          // degrees of AoA deviation, is increased as atmos pressure decreases
   
   // calculate some stuff for AoA limiting
-  LOCK AoA TO VANG(SHIP:SRFPROGRADE:VECTOR, SHIP:FACING:VECTOR).
+  LOCAL AoA TO VANG(SHIP:SRFPROGRADE:VECTOR, SHIP:FACING:VECTOR).
   LOCAL atmPressure IS SHP_pressure().
-  LOCK AoADynamicLimit TO CHOOSE 180 IF atmPressure < 0.001
+  LOCAL AoADynamicLimit TO CHOOSE 180 IF atmPressure < 0.001
         // 1 at sea level
         ELSE MIN(AoALimit / atmPressure, 180).
   
-  LOCK altRatio TO ALTITUDE/desiredAltitude.
-  LOCK desiredPitch TO 90 - ((MIN(altRatio, 1)^0.25) * 90).
+  LOCAL altRatio TO ALTITUDE/desiredAltitude.
+  LOCAL desiredPitch TO 90 - ((MIN(altRatio, 1)^0.25) * 90).
   
   // throttle related
   LOCAL maxTWR IS SHP_getMaxTWR().
@@ -58,7 +58,8 @@ FUNCTION BDY_ascendGuidance {
   IF NOT (maxTWR < 0.001)
   {
     // throttle down as approaching desired altitude.
-    LOCK THROTTLE TO CHOOSE 1 IF maxTWR <= desiredTWR ELSE MIN((desiredTwr / maxTWR), MAX(1 - altRatio, 0)).
+    LOCAL throt IS CHOOSE 1 IF maxTWR <= desiredTWR ELSE MIN((desiredTwr / maxTWR), MAX(1 - altRatio, 0)).
+    LOCK THROTTLE TO throt.
     SET telemetry["throttle"] TO THROTTLE.
   }
   ELSE
@@ -66,11 +67,12 @@ FUNCTION BDY_ascendGuidance {
     LOCK THROTTLE TO 0.
   }
   
-  LOCK steeringVector TO HEADING(HDG, desiredPitch).
-  LOCK STEERING TO CHOOSE steeringVector
+  LOCAL steeringVector TO HEADING(HDG, desiredPitch).
+  LOCAL steer IS CHOOSE steeringVector
                     IF AoA < AoADynamicLimit
                     // when AoA over limit then rotate srfprograde towards steering vector
                     ELSE MATH_vecRotToVec(steeringVector:VECTOR, SHIP:SRFPROGRADE:VECTOR, AoADynamicLimit).
+  LOCK STEERING TO steer.
   RETURN telemetry. // we're still doing stuff, send false.
 }
 
