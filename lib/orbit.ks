@@ -4,8 +4,8 @@ REQUIRE("lib/math.ks").
 function ORB_getDir {
   PARAMETER refNRM IS V(0,1,0).
   
-  LOCAL normvec TO VCRS(BODY:POSITION - ORBIT:POSITION, VELOCITY:ORBIT).
-  LOCAL anvec TO VCRS(normvec, refNRM).
+  LOCAL normvec IS VCRS(BODY:POSITION - ORBIT:POSITION, VELOCITY:ORBIT).
+  LOCAL anvec IS VCRS(normvec, refNRM).
   RETURN LOOKDIRUP(anvec, normvec).
 }
 
@@ -13,15 +13,15 @@ function ORB_getTimeToTA {
   PARAMETER ta.
   PARAMETER orbit_in IS ship:orbit.
   
-  LOCAL tanow TO orbit_in:TRUEANOMALY.
-  LOCAL ecc   TO orbit_in:ECCENTRICITY.
-  LOCAL ef    TO SQRT( (1-ecc) / (1+ecc) ).
-  LOCAL eanow TO 2*ARCTAN( ef * TAN(tanow / 2) ).
-  LOCAL eanew TO 2*ARCTAN( ef * TAN(ta / 2) ).
+  LOCAL tanow IS orbit_in:TRUEANOMALY.
+  LOCAL ecc   IS orbit_in:ECCENTRICITY.
+  LOCAL ef    IS SQRT( (1-ecc) / (1+ecc) ).
+  LOCAL eanow IS 2*ARCTAN( ef * TAN(tanow / 2) ).
+  LOCAL eanew IS 2*ARCTAN( ef * TAN(ta / 2) ).
   
-  local dt to SQRT( orbit_in:SEMIMAJORAXIS^3 / orbit_in:BODY:MU ) * ((eanew - eanow)*CONSTANT:DEGTORAD - ecc * (SIN(eanew) - SIN(eanow))).
-  until dt > 0 { set dt to dt + orbit_in:period. }
-  return dt.
+  LOCAL dt IS SQRT( orbit_in:SEMIMAJORAXIS^3 / orbit_in:BODY:MU ) * ((eanew - eanow)*CONSTANT:DEGTORAD - ecc * (SIN(eanew) - SIN(eanow))).
+  UNTIL dt > 0 { SET dt TO dt + orbit_in:period. }
+  RETURN dt.
 }
 
 FUNCTION ORB_hohmann {

@@ -239,7 +239,7 @@ FUNCTION TGT_findAN_DN_time
   LOCAL endTime IS startTime + SHIP:ORBIT:PERIOD.
   
   // to convert to body centric reference frame.
-  LOCAL sbp TO SHIP:BODY:POSITION.
+  LOCAL sbp IS SHIP:BODY:POSITION.
   
   // parameters for orbital plane for
   // MATH_distancePointToPlane(POSITIONAT(SHIP, t) - sbp, tgtNorm, tgtPos)

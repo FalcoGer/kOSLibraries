@@ -42,7 +42,7 @@ FUNCTION LDG_descendGuidance
     
     LOCAL STEER IS LDG_descendVector().
     LOCK STEERING TO steer.
-    LOCAL descendSpeed TO MIN(((ALT:RADAR - shipSize) / safetyAltitude)* -50, -1).
+    LOCAL descendSpeed IS MIN(((ALT:RADAR - shipSize) / safetyAltitude)* -50, -1).
     LOCAL throt IS LDG_hover(descendSpeed).
     LOCK THROTTLE TO throt.
   } ELSE {

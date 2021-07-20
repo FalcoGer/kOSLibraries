@@ -9,14 +9,14 @@ FUNCTION BDY_ascendGuidance {
   PARAMETER AoALimit IS 5.          // degrees of AoA deviation, is increased as atmos pressure decreases
   
   // calculate some stuff for AoA limiting
-  LOCAL AoA TO VANG(SHIP:SRFPROGRADE:VECTOR, SHIP:FACING:VECTOR).
+  LOCAL AoA IS VANG(SHIP:SRFPROGRADE:VECTOR, SHIP:FACING:VECTOR).
   LOCAL atmPressure IS SHP_pressure().
-  LOCAL AoADynamicLimit TO CHOOSE 180 IF atmPressure < 0.001
+  LOCAL AoADynamicLimit IS CHOOSE 180 IF atmPressure < 0.001
         // 1 at sea level
         ELSE MIN(AoALimit / atmPressure, 180).
   
-  LOCAL altRatio TO ALTITUDE/desiredAltitude.
-  LOCAL desiredPitch TO 90 - ((MIN(altRatio, 1)^0.25) * 90).
+  LOCAL altRatio IS ALTITUDE/desiredAltitude.
+  LOCAL desiredPitch IS 90 - ((MIN(altRatio, 1)^0.25) * 90).
   
   // throttle related
   LOCAL maxTWR IS SHP_getMaxTWR().
@@ -67,7 +67,7 @@ FUNCTION BDY_ascendGuidance {
     LOCK THROTTLE TO 0.
   }
   
-  LOCAL steeringVector TO HEADING(HDG, desiredPitch).
+  LOCAL steeringVector IS HEADING(HDG, desiredPitch).
   LOCAL steer IS CHOOSE steeringVector
                     IF AoA < AoADynamicLimit
                     // when AoA over limit then rotate srfprograde towards steering vector
