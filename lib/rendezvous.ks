@@ -114,7 +114,7 @@ FUNCTION RDV_getDockingPortTarget
   
   LOCAL tgt IS TARGET.
   
-  IF tgt:TYPENAME <> "Vessel" { SET tgt TO tgt:VESSEL. }
+  IF tgt:TYPENAME <> "Vessel" { SET tgt TO tgt:SHIP. }
   
   LOCAL pList IS tgt:DOCKINGPORTS.
   FOR p IN pList {
