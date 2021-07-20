@@ -144,15 +144,15 @@ FUNCTION RDV_docking
   LOCAL slowDownDistance IS safetyDistance / 2.
   
   // some measurements
-  LOCK ownPortPos TO ownPort:NODEPOSITION.
-  LOCK targetPortPos TO targetPort:NODEPOSITION - ownPortPos. 
+  LOCAL ownPortPos IS ownPort:NODEPOSITION.
+  LOCAL targetPortPos IS targetPort:NODEPOSITION - ownPortPos.
   
-  LOCK rVel TO SHIP:VELOCITY:ORBIT - targetPort:SHIP:VELOCITY:ORBIT.
-  LOCK t2s TO -1 * targetPortPos.
-  LOCK tgtFwd TO targetPort:PORTFACING:VECTOR.
-  LOCK tgtUp TO MATH_vecRotToVec(targetPort:PORTFACING:TOPVECTOR, targetPort:PORTFACING:STARVECTOR, angle).
-  LOCK angleOffset TO VANG(tgtFwd, t2s).
-  LOCK sideVector TO VCRS(VCRS(tgtFwd, t2s), tgtFwd):NORMALIZED * safetyDistance.
+  LOCAL rVel IS SHIP:VELOCITY:ORBIT - targetPort:SHIP:VELOCITY:ORBIT.
+  LOCAL t2s IS -1 * (targetPortPos - ownPortPos).
+  LOCAL tgtFwd IS targetPort:PORTFACING:VECTOR.
+  LOCAL tgtUp IS MATH_vecRotToVec(targetPort:PORTFACING:TOPVECTOR, targetPort:PORTFACING:STARVECTOR, angle).
+  LOCAL angleOffset IS VANG(tgtFwd, t2s).
+  LOCAL sideVector IS VCRS(VCRS(tgtFwd, t2s), tgtFwd):NORMALIZED * safetyDistance.
   
   IF
       (targetPortPos:MAG < 190)
@@ -164,23 +164,27 @@ FUNCTION RDV_docking
     SET TARGET TO targetPort.
   }
   
-  LOCK targetPosition TO 
+  LOCAL targetPosition IS 
             // we are behind the target. Move to side position first.
-            CHOOSE targetPortPos + sideVector IF angleOffset > 90
-            // we are in front of the docking port, but not in line
-      ELSE  CHOOSE tgtFwd * safetyDistance + targetPortPos IF angleOffset > 5 AND targetPortPos:MAG > 10
+            CHOOSE targetPortPos + sideVector IF angleOffset > 90 AND (t2s:MAG > 3)
+            // we are way out of line
+      ELSE  CHOOSE tgtFwd * safetyDistance + targetPortPos IF angleOffset > 30 AND targetPortPos:MAG > 3
             // we are in line and farther away than safetyDistance / 4
       ELSE  CHOOSE tgtFwd * (safetyDistance / 8) + targetPortPos IF targetPortPos:MAG > (safetyDistance / 4)
+            // we are in front of the docking port, but not in line
+            // move towards centerline
+      ELSE  CHOOSE tgtFwd * (t2s:MAG * 0.95 * COS(angleOffset)) + targetPortPos
+        IF angleOffset > (5 * (1 - t2s:MAG / (safetyDistance / 4))) AND targetPortPos:MAG > 3
             // we are in line and no farther than safetyDistance / 4
-      ELSE  targetPortPos.
+      ELSE  tgtFwd * (t2s:MAG * 0.5 * COS(angleOffset)) + targetPortPos.
   
   // point directly at the target port at the specified angle
   LOCK STEERING TO LOOKDIRUP(-1 * tgtFwd, tgtUp).
   
   // calculate speed
-  LOCK approachSpeed TO MIN(maxSpeed, MAX((targetPosition:MAG / slowDownDistance) * maxSpeed, finalApproachSpeed)).
+  LOCAL approachSpeed IS MIN(maxSpeed, MAX((targetPosition:MAG / slowDownDistance) * maxSpeed, finalApproachSpeed)).
   // calculate maneuvering
-  LOCK manVec TO (targetPosition:NORMALIZED * approachSpeed) - rVel.
+  LOCAL manVec IS (targetPosition:NORMALIZED * approachSpeed) - rVel.
   
   IF NOT RCS { RCS ON. }
   MNV_translation(manVec).
