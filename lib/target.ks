@@ -243,7 +243,7 @@ FUNCTION TGT_findAN_DN_time
   
   // parameters for orbital plane for
   // MATH_distancePointToPlane(POSITIONAT(SHIP, t) - sbp, tgtNorm, tgtPos)
-  LOCAL tgtNorm IS CHOOSE ORB_getNormal(tgt) IF tgt <> SHIP AND tgt <> SHIP:BODY ELSE ORB_getNormal(SHIP:BODY).
+  LOCAL tgtNorm IS CHOOSE ORB_getNormal(tgt) IF tgt <> SHIP AND tgt <> SHIP:BODY ELSE V(0,1,0).
   LOCAL tgtPos IS CHOOSE POSITIONAT(tgt, startTime) - sbp IF tgt <> SHIP AND tgt <> SHIP:BODY ELSE VCRS(POSITIONAT(SHIP, startTime) - sbp, tgtNorm).
   
   
@@ -296,7 +296,7 @@ FUNCTION TGT_matchInclination {
   PARAMETER tgt IS CHOOSE TARGET IF HASTARGET ELSE SHIP.
   
   LOCAL anDn IS TGT_findAN_DN_time(tgt).
-  LOCAL deltaInc IS CHOOSE VANG(ORB_getNormal(), ORB_getNormal(tgt)) IF tgt <> SHIP AND tgt <> SHIP:BODY ELSE SHIP:ORBIT:INCLINATION.
+  LOCAL deltaInc IS CHOOSE VANG(ORB_getNormal(), ORB_getNormal(tgt)) IF tgt <> SHIP AND tgt <> SHIP:BODY ELSE VANG(V(0,1,0), ORB_getNormal()).
   
   // generate maneuver node at next slowest an or dn
   LOCAL vAN IS VELOCITYAT(SHIP, anDn[0]):ORBIT:MAG.
