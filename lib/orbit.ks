@@ -29,10 +29,15 @@ FUNCTION ORB_hohmann {
   
   LOCAL hohmann IS ORB_hohmannDv(desiredAltitude).
   
-  LOCAL n1 IS NODE(SHIP:ORBIT:ETA:PERIAPSIS + TIME:SECONDS, 0, 0, hohmann[0]).
+  LOCAL goingUp IS desiredAltitude > SHIP:APOAPSIS.
+  LOCAL n1Eta IS CHOOSE SHIP:ORBIT:ETA:PERIAPSIS IF goingUp ELSE SHIP:ORBIT:ETA:APOAPSIS.
+  
+  LOCAL n1 IS NODE(n1Eta + TIME:SECONDS, 0, 0, hohmann[0]).
   ADD n1.
   WAIT 0.03. // wait for orbits to update
-  LOCAL n2 IS NODE(n1:ORBIT:ETA:APOAPSIS + TIME:SECONDS, 0, 0, hohmann[1]).
+  
+  LOCAL n2Eta IS CHOOSE n1:ORBIT:ETA:APOAPSIS IF goingUp ELSE n1:ORBIT:ETA:PERIAPSIS.
+  LOCAL n2 IS NODE(n2Eta + TIME:SECONDS, 0, 0, hohmann[1]).
   ADD n2.
   WAIT 0.03.
 }
