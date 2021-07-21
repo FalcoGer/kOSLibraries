@@ -33,10 +33,9 @@ FUNCTION MNV_nodeExec {
   
   IF HASNODE {
     LOCK STEERING TO NEXTNODE:BURNVECTOR.     // steer to maneuver node
-    LOCAL mnvDv TO NEXTNODE:BURNVECTOR:MAG.   // fetch maneuver dV
-    LOCAL mnvTime TO MNV_getTimeForFixedDVManeuver(NEXTNODE:BURNVECTOR:MAG).
-    LOCAL deltaAngle TO VANG(SHIP:FACING:VECTOR, NEXTNODE:BURNVECTOR).
-    LOCAL startTime TO MNV_getNodeStartTime(NEXTNODE).
+    LOCK mnvDv TO NEXTNODE:BURNVECTOR:MAG.   // fetch maneuver dV
+    LOCK deltaAngle TO VANG(SHIP:FACING:VECTOR, NEXTNODE:BURNVECTOR).
+    LOCAL startTime IS MNV_getNodeStartTime(NEXTNODE).
     
     // check if time has come to burn
     IF TIME:SECONDS > startTime
@@ -50,11 +49,10 @@ FUNCTION MNV_nodeExec {
           // or if there is only a tiny bit of maneuver left
           // and the node is within maxAngleEngine, and rcs is not selected
           ((deltaAngle < maxAngleEngine) AND (mnvDv <= maxDvDeviationEngine) AND NOT useRCS).
-      LOCAL throt IS CHOOSE
-        MIN(mnvTime / 0.5, 1)
+      LOCK THROTTLE TO CHOOSE
+        MIN(0.2 / mnvDv, 1)
         IF engineBurnRequired 
         ELSE 0.
-      LOCK THROTTLE TO throt.
       
       // check if engine stage is done
       IF NOT engineBurnRequired {
