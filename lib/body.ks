@@ -95,10 +95,10 @@ FUNCTION BDY_getOrbPeriod {
 
 // get the altitude of a geostationary orbit for the body.
 FUNCTION BDY_getGeoStationaryAlt {
-  PARAMETER bdy.
+  PARAMETER bdy IS SHIP:BODY.
   
   // 2 * pi * sqrt(sma^3 / mu) = bdy:rotationperiod, solve for sma
-  RETURN (bdy:ROTATIONPERIOD^(2/3) * bdy:mu^(1/3)) / (2* CONSTANT:PI)^(2/3).
+  RETURN ((bdy:ROTATIONPERIOD^(2/3) * bdy:mu^(1/3)) / (2* CONSTANT:PI)^(2/3)) - bdy:RADIUS.
 }
 
 // get a normalized vector pointing directly up from the surface
