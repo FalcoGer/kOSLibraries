@@ -33,13 +33,13 @@ FUNCTION MNV_nodeExec {
   
   IF HASNODE {
     LOCK STEERING TO NEXTNODE:BURNVECTOR.     // steer to maneuver node
-    LOCK mnvDv TO NEXTNODE:BURNVECTOR:MAG.   // fetch maneuver dV
     LOCK deltaAngle TO VANG(SHIP:FACING:VECTOR, NEXTNODE:BURNVECTOR).
     LOCAL startTime IS MNV_getNodeStartTime(NEXTNODE).
     
     // check if time has come to burn
     IF TIME:SECONDS > startTime
     {
+      LOCK mnvDv TO NEXTNODE:BURNVECTOR:MAG.   // fetch maneuver dV
       // Do engine burn
       // only use main throttle to chase node if node is
       // within minAngleEngine of ship facing
@@ -49,9 +49,11 @@ FUNCTION MNV_nodeExec {
           // or if there is only a tiny bit of maneuver left
           // and the node is within maxAngleEngine, and rcs is not selected
           ((deltaAngle < maxAngleEngine) AND (mnvDv <= maxDvDeviationEngine) AND NOT useRCS).
+      
+      // the last 2 seconds, throttle down.
       LOCK THROTTLE TO CHOOSE
-        MIN(0.2 / mnvDv, 1)
-        IF engineBurnRequired 
+        MIN(MAX(MNV_getTimeForFixedDVManeuver(mnvDv), 0.025), 1)
+        IF engineBurnRequired
         ELSE 0.
       
       // check if engine stage is done
@@ -60,9 +62,11 @@ FUNCTION MNV_nodeExec {
         LOCK STEERING TO "kill".
         IF NOT useRCS {
           UNLOCK THROTTLE.
-          UNLOCK STEERING.
+          LOCK STEERING TO "kill".
           REMOVE NEXTNODE.
           WAIT 0.03.
+          WAIT 2.
+          UNLOCK STEERING.
         }
         ELSE {
           // RCS required for final correction to below allowedDvError
@@ -74,10 +78,13 @@ FUNCTION MNV_nodeExec {
           else {
             // RCS correction burn completed.
             RCS OFF.
+            MNV_translation(V(0,0,0)).
             UNLOCK THROTTLE.
-            UNLOCK STEERING.
+            LOCK STEERING TO "kill".
             REMOVE NEXTNODE.
             WAIT 0.03.
+            WAIT 2.
+            UNLOCK STEERING.
           }
         }
       }
@@ -134,18 +141,21 @@ FUNCTION MNV_getTimeForFixedDVManeuver {
   LOCAL engineISP             IS SHP_getISP().
   
   IF engineTotalThrust = 0 OR engineISP = 0 {
-    NOTIFY("No engine available for maneuver time.", 3).
     RETURN 0.
   }
   
   // Rocket equation
-  LOCAL f IS engineTotalThrust * 1000.  // [kg * m/s^2] - thrust is in kN, we need N
-  LOCAL m IS SHIP:MASS * 1000.          // [kg]         - ship mass is in metric tonns, we need kg
-  LOCAL e IS CONSTANT:E.                // [1]          - for simplicity
-  LOCAL p IS engineISP.                 // [s]          - for simplicity
   LOCAL g IS BODY:MU/BODY:RADIUS^2.     // [m/s^2]      - gravitational constant.
   
-  LOCAL t IS g * m * p * (1 - e^(-dV / (g * p))) / f.
+  LOCAL t IS g
+              * SHIP:MASS * 1000  // m = [kg], ship mass in kg
+              * engineISP         // isp in s
+              * (
+                1
+                - CONSTANT:E^(
+                  -dV / (g * engineISP))
+                )
+              / (engineTotalThrust * 1000).   // f = [kg * m/s^2] - thrust is in N
   RETURN t.
 }
 
