@@ -67,6 +67,10 @@ FUNCTION MATH_hillClimb {
   LOCAL bestFit IS initialData.
   LOCAL bestFitFitness IS fitnessFunction(bestFit).
   
+  // store computed fitnesses to avoid very minor changes due to physics
+  // changing fitnesses around and causing an endless loop while searching 
+  LOCAL storedFitnesses IS LEXICON(bestFit, bestFitFitness).
+  
   FROM { LOCAL stepNum IS 0. } UNTIL (stepNum >= numOfSteps) STEP { SET stepNum TO stepNum + 1. } DO {
     LOCAL betterFound IS TRUE.
     UNTIL NOT betterFound {           // until best neighbor with current step size is found.
@@ -100,7 +104,22 @@ FUNCTION MATH_hillClimb {
       
       // find the best one
       FOR neighbor IN neighbors {
-        LOCAL neighborFitness IS fitnessFunction(neighbor).
+        LOCAL neighborFitness IS 0.
+        
+        // generate string to use as a key
+        // lists do not compare against same lists because it's a reference
+        LOCAL neighborKey IS neighbor:JOIN(",").
+        
+        // search if we have a fitness stored already for this.
+        IF storedFitnesses:HASKEY(neighborKey) {
+          SET neighborFitness TO storedFitnesses[neighborKey].
+        } ELSE {
+          // we didn't find any stored fitnesses
+          // compute fitness and add to lexicon
+          SET neighborFitness TO fitnessFunction(neighbor).
+          SET storedFitnesses[neighbor] TO neighborFitness.
+        }
+        
         IF neighborFitness > bestFitFitness {
           // better neighbor found
           SET betterFound TO TRUE.          // continue with current step size.
