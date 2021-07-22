@@ -48,6 +48,13 @@ body:
       3. 1/4 orbit from PE bring srfvelocity in line with vector to target (horizontal component only)
       4. calculate time to "impact" to the landing position, suicide burn horizontal velocity off just above the target facing retrograde
       5. normal landing with hvel near 0, maybe tilt ship during descend to make horizontal velocity point at the landing spot.
+
+TheGreatFez 🚀 — Today at 00:53
+Well, the way that I did it, was that I worked out a system where I would select where I wanted to land, then I would work out the inclination to be equal to the latitude.
+
+From there, I would create a node to change my inclination to match that, then 90degrees after that maneuver node position (on the new orbit) I would create another node to do a hohmann transfer to drop my altitude
+From there, I would use a solver to determine when the first node needs to be so that after it executes both nodes and reaches the periapsis, it will cross over the target position exactly as it passes the periapsis
+
 - time to suicide burn (use fixed dv maneuver time, calculate speed at different heights, equate, solve for height)
 - time to impact: d = v0 * t + (a*t^2)/2, solve for t: t = (SQRT(v^2 + 2*g*d) - v) / g     ; where v = initial velocity, g = surface gravity, d = distance to surface.
 
