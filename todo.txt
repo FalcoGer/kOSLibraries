@@ -48,6 +48,13 @@ body:
       3. 1/4 orbit from PE bring srfvelocity in line with vector to target (horizontal component only)
       4. calculate time to "impact" to the landing position, suicide burn horizontal velocity off just above the target facing retrograde
       5. normal landing with hvel near 0, maybe tilt ship during descend to make horizontal velocity point at the landing spot.
+      
+      0. make orbit equatorial (orbital plane perpendicular to north vector)
+      1. find out how much the landing spot moves in half an orbit
+      2. 90° from landing spot future position incline orbit to latitude
+      3. as latitude is highest/lowest it should be right on top of the landing site, kill hvel
+      4. drop to landing site, suicide burn with nose pointing towards the landing site - current hvel
+      5. hover descend with nose pointing towards landing site
 
 TheGreatFez 🚀 — Today at 00:53
 Well, the way that I did it, was that I worked out a system where I would select where I wanted to land, then I would work out the inclination to be equal to the latitude.
